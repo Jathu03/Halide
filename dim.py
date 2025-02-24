@@ -6,7 +6,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 import os
-from torch.cuda.amp import GradScaler, autocast  # For mixed precision training
+from torch.cuda.amp import GradScaler, autocast
 
 # Ensure CUDA is available
 assert torch.cuda.is_available(), "CUDA is not available. Please check your GPU setup."
@@ -69,7 +69,7 @@ def extract_features(data):
     
     return np.array(features), exec_time
 
-# Load and preprocess all synthetic data
+# Load and preprocess all synthetic data (keep on CPU until DataLoader)
 def load_dataset(data_dir="synthetic_data"):
     X_data = []
     y_data = []
@@ -101,9 +101,9 @@ def load_dataset(data_dir="synthetic_data"):
     scaler_y = MinMaxScaler()
     y_normalized = scaler_y.fit_transform(y_data)
     
-    # Convert to CUDA tensors
-    X_tensor = torch.FloatTensor(X_normalized).to(device)
-    y_tensor = torch.FloatTensor(y_normalized).to(device)
+    # Return as CPU tensors (pin_memory will handle GPU transfer)
+    X_tensor = torch.FloatTensor(X_normalized)
+    y_tensor = torch.FloatTensor(y_normalized)
     
     return X_tensor, y_tensor, scaler_X, scaler_y
 
@@ -133,20 +133,21 @@ class LSTMSpeedupPredictor(nn.Module):
 # Training function with mixed precision
 def train_model(model, X_train, y_train, epochs=100, batch_size=8):
     dataset = TensorDataset(X_train, y_train)
-    loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, pin_memory=True)  # pin_memory for faster GPU transfer
+    loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, pin_memory=True)
     
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
-    scaler = GradScaler()  # For mixed precision training
+    scaler = GradScaler()
     
     model.train()
     for epoch in range(epochs):
         total_loss = 0
         for X_batch, y_batch in loader:
+            # Move to GPU inside the loop
             X_batch, y_batch = X_batch.to(device), y_batch.to(device)
             
             optimizer.zero_grad()
-            with autocast():  # Mixed precision context
+            with autocast():
                 outputs = model(X_batch)
                 loss = criterion(outputs, y_batch)
             
@@ -158,11 +159,11 @@ def train_model(model, X_train, y_train, epochs=100, batch_size=8):
         if (epoch + 1) % 10 == 0:
             avg_loss = total_loss / len(loader)
             print(f"Epoch [{epoch+1}/{epochs}], Loss: {avg_loss:.4f}")
-            torch.cuda.empty_cache()  # Clear GPU memory
+            torch.cuda.empty_cache()
 
 # Generate schedule variations for prediction
 def generate_schedule_variations(features, num_variations=5):
-    features_cpu = features.cpu().numpy()  # Convert to CPU for NumPy ops
+    features_cpu = features.cpu().numpy()
     variations = []
     for _ in range(num_variations):
         varied = features_cpu.copy()
@@ -175,37 +176,32 @@ def generate_schedule_variations(features, num_variations=5):
 
 # Main function to train and predict
 def train_and_predict(data_dir="synthetic_data"):
-    # Load and preprocess dataset
     X_data, y_data, scaler_X, scaler_y = load_dataset(data_dir)
     print(f"Loaded {X_data.shape[0]} samples with shape {X_data.shape}")
     
-    # Split into train and test (80% train, 20% test)
     split_idx = int(0.8 * len(X_data))
     X_train, X_test = X_data[:split_idx], X_data[split_idx:]
     y_train, y_test = y_data[:split_idx], y_data[split_idx:]
     
-    # Initialize model
     input_size = X_data.shape[2]
     model = LSTMSpeedupPredictor(input_size).to(device)
     
-    # Train model
     train_model(model, X_train, y_train, epochs=100)
     
-    # Evaluate on test set
     model.eval()
     with torch.no_grad():
+        X_test_cuda = X_test.to(device)
+        y_test_cuda = y_test.to(device)
         with autocast():
-            y_pred = model(X_test)
-        test_loss = nn.MSELoss()(y_pred, y_test)
+            y_pred = model(X_test_cuda)
+        test_loss = nn.MSELoss()(y_pred, y_test_cuda)
         print(f"Test Loss (Normalized): {test_loss.item():.4f}")
         
-        # Denormalize predictions
         y_pred_denorm = scaler_y.inverse_transform(y_pred.cpu().numpy())
         y_test_denorm = scaler_y.inverse_transform(y_test.cpu().numpy())
         rmse = np.sqrt(np.mean((y_pred_denorm - y_test_denorm) ** 2))
         print(f"Test RMSE (ms): {rmse:.2f}")
     
-    # Predict speedup for a sample (first test sample)
     sample_features = X_test[0:1]  # Shape: (1, timesteps, features)
     sample_time = y_test_denorm[0][0]
     print(f"\nBaseline Time for Sample: {sample_time:.2f} ms")
@@ -213,7 +209,7 @@ def train_and_predict(data_dir="synthetic_data"):
     variations = generate_schedule_variations(sample_features[0])
     with torch.no_grad():
         for i, X_var in enumerate(variations):
-            X_var = X_var.unsqueeze(0)  # Add batch dimension
+            X_var = X_var.unsqueeze(0)
             with autocast():
                 pred_time_norm = model(X_var).item()
             pred_time = scaler_y.inverse_transform([[pred_time_norm]])[0][0]
