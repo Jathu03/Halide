@@ -6,9 +6,12 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 import os
+from torch.cuda.amp import GradScaler, autocast  # For mixed precision training
 
-# Device configuration
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# Ensure CUDA is available
+assert torch.cuda.is_available(), "CUDA is not available. Please check your GPU setup."
+device = torch.device("cuda")
+print(f"Using device: {torch.cuda.get_device_name(0)}")
 
 # Load JSON data from a file
 def load_data(file_path):
@@ -31,7 +34,6 @@ def extract_features(data):
         node = node_dict[node_name]
         sched = sched_dict.get(node_name, {})
         
-        # Parse Op histogram
         op_hist = {}
         for entry in node["Op histogram"]:
             parts = entry.split(':')
@@ -78,7 +80,6 @@ def load_dataset(data_dir="synthetic_data"):
             data = load_data(file_path)
             features, exec_time = extract_features(data)
             
-            # Pad or truncate sequences to a fixed length (e.g., 20 nodes)
             max_length = 20
             if features.shape[0] < max_length:
                 padding = np.zeros((max_length - features.shape[0], features.shape[1]))
@@ -100,7 +101,11 @@ def load_dataset(data_dir="synthetic_data"):
     scaler_y = MinMaxScaler()
     y_normalized = scaler_y.fit_transform(y_data)
     
-    return X_normalized, y_normalized, scaler_X, scaler_y
+    # Convert to CUDA tensors
+    X_tensor = torch.FloatTensor(X_normalized).to(device)
+    y_tensor = torch.FloatTensor(y_normalized).to(device)
+    
+    return X_tensor, y_tensor, scaler_X, scaler_y
 
 # Define LSTM model
 class LSTMSpeedupPredictor(nn.Module):
@@ -125,39 +130,47 @@ class LSTMSpeedupPredictor(nn.Module):
         out = self.fc2(out)
         return out
 
-# Training function
+# Training function with mixed precision
 def train_model(model, X_train, y_train, epochs=100, batch_size=8):
-    dataset = TensorDataset(torch.FloatTensor(X_train), torch.FloatTensor(y_train))
-    loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+    dataset = TensorDataset(X_train, y_train)
+    loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, pin_memory=True)  # pin_memory for faster GPU transfer
     
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
+    scaler = GradScaler()  # For mixed precision training
     
     model.train()
     for epoch in range(epochs):
         total_loss = 0
         for X_batch, y_batch in loader:
             X_batch, y_batch = X_batch.to(device), y_batch.to(device)
+            
             optimizer.zero_grad()
-            outputs = model(X_batch)
-            loss = criterion(outputs, y_batch)
-            loss.backward()
-            optimizer.step()
+            with autocast():  # Mixed precision context
+                outputs = model(X_batch)
+                loss = criterion(outputs, y_batch)
+            
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
             total_loss += loss.item()
+        
         if (epoch + 1) % 10 == 0:
             avg_loss = total_loss / len(loader)
             print(f"Epoch [{epoch+1}/{epochs}], Loss: {avg_loss:.4f}")
+            torch.cuda.empty_cache()  # Clear GPU memory
 
 # Generate schedule variations for prediction
 def generate_schedule_variations(features, num_variations=5):
+    features_cpu = features.cpu().numpy()  # Convert to CPU for NumPy ops
     variations = []
     for _ in range(num_variations):
-        varied = features.copy()
+        varied = features_cpu.copy()
         varied[:, 8] *= np.random.uniform(0.5, 2.0)  # inner_parallelism
         varied[:, 9] *= np.random.uniform(0.5, 2.0)  # outer_parallelism
         varied[:, 10] = np.clip(varied[:, 10] * np.random.uniform(0.5, 2.0), 1, 32)  # vector_size
         varied[:, 11] = np.clip(varied[:, 11] * np.random.uniform(0.5, 2.0), 1, 16)  # unrolled_loop_extent
-        variations.append(varied)
+        variations.append(torch.FloatTensor(varied).to(device))
     return variations
 
 # Main function to train and predict
@@ -181,29 +194,28 @@ def train_and_predict(data_dir="synthetic_data"):
     # Evaluate on test set
     model.eval()
     with torch.no_grad():
-        X_test_tensor = torch.FloatTensor(X_test).to(device)
-        y_test_tensor = torch.FloatTensor(y_test).to(device)
-        y_pred = model(X_test_tensor)
-        test_loss = nn.MSELoss()(y_pred, y_test_tensor)
+        with autocast():
+            y_pred = model(X_test)
+        test_loss = nn.MSELoss()(y_pred, y_test)
         print(f"Test Loss (Normalized): {test_loss.item():.4f}")
         
-        # Denormalize predictions for interpretation
+        # Denormalize predictions
         y_pred_denorm = scaler_y.inverse_transform(y_pred.cpu().numpy())
-        y_test_denorm = scaler_y.inverse_transform(y_test)
+        y_test_denorm = scaler_y.inverse_transform(y_test.cpu().numpy())
         rmse = np.sqrt(np.mean((y_pred_denorm - y_test_denorm) ** 2))
         print(f"Test RMSE (ms): {rmse:.2f}")
     
-    # Predict speedup for a sample (e.g., first test sample)
-    sample_features = X_test[0]  # Shape: (timesteps, features)
+    # Predict speedup for a sample (first test sample)
+    sample_features = X_test[0:1]  # Shape: (1, timesteps, features)
     sample_time = y_test_denorm[0][0]
     print(f"\nBaseline Time for Sample: {sample_time:.2f} ms")
     
-    variations = generate_schedule_variations(sample_features)
-    X_variations = [torch.FloatTensor(v.reshape(1, v.shape[0], v.shape[1])).to(device) for v in variations]
-    
+    variations = generate_schedule_variations(sample_features[0])
     with torch.no_grad():
-        for i, X_var in enumerate(X_variations):
-            pred_time_norm = model(X_var).item()
+        for i, X_var in enumerate(variations):
+            X_var = X_var.unsqueeze(0)  # Add batch dimension
+            with autocast():
+                pred_time_norm = model(X_var).item()
             pred_time = scaler_y.inverse_transform([[pred_time_norm]])[0][0]
             speedup = sample_time / pred_time if pred_time > 0 else 1.0
             print(f"Variation {i+1}: Predicted Time: {pred_time:.2f} ms, Speedup: {speedup:.2f}x")
@@ -211,7 +223,3 @@ def train_and_predict(data_dir="synthetic_data"):
 # Example usage
 if __name__ == "__main__":
     train_and_predict(data_dir="synthetic_data")
-
-
- #   file_path =     file_path = r"data\combined_data.json"
-   
