@@ -3,7 +3,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.data import DataLoader, Dataset
 import os
 from sklearn.preprocessing import MinMaxScaler
 from collections import defaultdict
@@ -16,7 +16,7 @@ MAX_NODES = 20
 MAX_LOOPS = 5
 MAX_NUM_TRANSFORMATIONS = 4
 MAX_TAGS = 8
-MAX_EXPR_LEN = 11  # Placeholder for compatibility
+MAX_EXPR_LEN = 11
 
 # Load JSON data
 def load_data(file_path):
@@ -33,15 +33,13 @@ def get_halide_representation_template(program_dict):
     node_dict = {node["Name"]: node["Details"] for node in nodes}
     sched_dict = {item["Name"]: item["Details"]["scheduling_feature"] for item in scheduling if "Name" in item}
 
-    # Build dependency graph
     dependents = defaultdict(list)
     dependents_of = defaultdict(list)
     for edge in edges:
-        from_node, to_node = edge["From"], edge["To"].split(".")[0]  # Handle .update(0)
+        from_node, to_node = edge["From"], edge["To"].split(".")[0]
         dependents[from_node].append(to_node)
         dependents_of[to_node].append(from_node)
 
-    # Topological sort to order computations
     def topological_sort():
         in_degree = {n: len(dependents_of[n]) for n in node_dict}
         queue = [n for n in node_dict if in_degree[n] == 0]
@@ -57,7 +55,6 @@ def get_halide_representation_template(program_dict):
 
     comp_order = topological_sort()
 
-    # Build a simple tree: root level for independent nodes, child levels for dependents
     tree = {"roots": []}
     seen = set()
     for comp_name in comp_order:
@@ -69,7 +66,6 @@ def get_halide_representation_template(program_dict):
                 "child_list": [],
                 "has_comps": True
             }
-            # Add dependent computations as children
             for dep in dependents[comp_name]:
                 if dep not in seen:
                     child = {
@@ -108,8 +104,8 @@ def get_halide_representation_template(program_dict):
             op_hist.get("Min", 0),
             op_hist.get("Max", 0),
             op_hist.get("FuncCall", 0),
-            len(dependents_of[node_name]),  # Inputs
-            1 if any(e["To"] == f"{node_name}.update(0)" for e in edges) else 0  # Reduction
+            len(dependents_of[node_name]),
+            1 if any(e["To"] == f"{node_name}.update(0)" for e in edges) else 0
         ]
 
         c_code = f"C{comp_idx}"
@@ -123,7 +119,6 @@ def get_halide_representation_template(program_dict):
             if isinstance(element, str):
                 comps_placeholders_indices_dict[element] = (comp_idx, j)
 
-    # Loop representation (shared across tree levels)
     loop_repr = []
     for loop_idx in range(MAX_LOOPS):
         l_code = f"L{loop_idx}"
@@ -141,7 +136,6 @@ def get_halide_representation_template(program_dict):
         if isinstance(element, str):
             loops_indices_dict[element] = (0, j)
 
-    # Update tree with computation indices
     for root in tree["roots"]:
         root["computations_indices"] = torch.tensor([comps_indices_dict[name] for name in root["computations_list"]])
         for child in root["child_list"]:
@@ -164,7 +158,6 @@ def get_halide_schedule_representation(program_dict, tree, comps_repr_templates,
         sched = sched_dict.get(node_name, {})
         c_code = f"C{comp_idx}"
 
-        # Fill loop transformations (applied uniformly for simplicity)
         for loop_idx in range(min(MAX_LOOPS, 2)):
             l_code = f"L{loop_idx}"
             loops_repr[0][loops_indices_dict[f"{l_code}-Parallel"][1]] = 1 if sched.get("inner_parallelism", 1.0) > 1.0 else 0
@@ -175,7 +168,7 @@ def get_halide_schedule_representation(program_dict, tree, comps_repr_templates,
             loops_repr[0][loops_indices_dict[f"{l_code}-Unroll"][1]] = 1 if sched.get("unrolled_loop_extent", 1.0) > 1.0 else 0
             loops_repr[0][loops_indices_dict[f"{l_code}-UnrollFactor"][1]] = sched.get("unrolled_loop_extent", 1.0)
 
-        tags = [0] * (MAX_NUM_TRANSFORMATIONS * MAX_TAGS)  # Placeholder
+        tags = [0] * (MAX_NUM_TRANSFORMATIONS * MAX_TAGS)
         tags_start = comps_placeholders_indices_dict[f"{c_code}-TransformTagsStart"]
         tags_end = comps_placeholders_indices_dict[f"{c_code}-TransformTagsEnd"]
         comps_repr[comp_idx][tags_start[1]:tags_end[1] + 1] = tags
@@ -195,7 +188,7 @@ def get_halide_schedule_representation(program_dict, tree, comps_repr_templates,
     comps_tensor_third_part = comps_tensor[:, first_part_size + MAX_NUM_TRANSFORMATIONS * MAX_TAGS:]
 
     loops_tensor = torch.FloatTensor([[float(x) if not isinstance(x, str) else 0.0 for x in loops_repr[0]]]).unsqueeze(0)
-    functions_comps_expr_tree = torch.zeros(1, MAX_NODES, MAX_EXPR_LEN, 11)  # Placeholder
+    functions_comps_expr_tree = torch.zeros(1, MAX_NODES, MAX_EXPR_LEN, 11)
 
     return (tree, comps_tensor_first_part.unsqueeze(0), comps_tensor_vectors.unsqueeze(0), comps_tensor_third_part.unsqueeze(0), loops_tensor, functions_comps_expr_tree), float(exec_time)
 
@@ -219,7 +212,33 @@ def load_halide_dataset(data_dir="synthetic_data"):
 
     return X_data, y_normalized, scaler_y
 
-# Recursive LSTM Model (unchanged except for input_size adjustment)
+# Custom Dataset to handle tree tensors
+class HalideDataset(Dataset):
+    def __init__(self, X_data, y_data):
+        self.X_data = X_data
+        self.y_data = y_data
+
+    def __len__(self):
+        return len(self.X_data)
+
+    def __getitem__(self, idx):
+        return self.X_data[idx], self.y_data[idx]
+
+# Collate function to batch tree tensors
+def collate_fn(batch):
+    trees, comps_first, comps_vectors, comps_third, loops, exprs, y = [], [], [], [], [], [], []
+    for tree_tensors, y_val in batch:
+        tree, first, vectors, third, loop, expr = tree_tensors
+        trees.append(tree)
+        comps_first.append(first)
+        comps_vectors.append(vectors)
+        comps_third.append(third)
+        loops.append(loop)
+        exprs.append(expr)
+        y.append(y_val)
+    return (trees, torch.cat(comps_first, dim=0), torch.cat(comps_vectors, dim=0), torch.cat(comps_third, dim=0), torch.cat(loops, dim=0), torch.cat(exprs, dim=0)), torch.tensor(y)
+
+# Recursive LSTM Model
 class Model_Recursive_LSTM_v2(nn.Module):
     def __init__(
         self,
@@ -322,7 +341,7 @@ class Model_Recursive_LSTM_v2(nn.Module):
             x = self.comp_embedding_dropouts[i](self.ELU(x))
         comps_embeddings = x
         
-        roots_list = [self.get_hidden_state(root, comps_embeddings, loops_tensor) for root in tree["roots"]]
+        roots_list = [self.get_hidden_state(root, comps_embeddings, loops_tensor) for root in tree[0]]  # tree is a list of trees per batch
         roots_tensor = torch.cat(roots_list, 1)
         lstm_out, (roots_h_n, _) = self.roots_lstm(roots_tensor)
         roots_h_n = roots_h_n.permute(1, 0, 2)
@@ -342,7 +361,7 @@ def train_model(model, train_loader, epochs=100):
     model.train()
     for epoch in range(epochs):
         total_loss = 0
-        for batch_idx, (tree_tensors, y_batch) in enumerate(train_loader):
+        for tree_tensors, y_batch in train_loader:
             tree_tensors = tuple(t.to(device) if isinstance(t, torch.Tensor) else t for t in tree_tensors)
             y_batch = y_batch.to(device)
             optimizer.zero_grad()
@@ -365,19 +384,19 @@ def predict_halide_speedup(data_dir="synthetic_data"):
     y_train, y_test = y_data[:split_idx], y_data[split_idx:]
     print(f"Training samples: {len(X_train)}, Test samples: {len(X_test)}")
 
-    train_dataset = TensorDataset(torch.tensor(np.arange(len(X_train)), dtype=torch.long), torch.FloatTensor(y_train))
-    train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True)
+    train_dataset = HalideDataset(X_train, y_train)
+    train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True, collate_fn=collate_fn)
 
-    input_size = X_data[0][1].shape[-1]  # comps_tensor_first_part size
+    input_size = X_data[0][1].shape[-1]
     model = Model_Recursive_LSTM_v2(input_size=input_size, device=device).to(device)
-    train_model(model, [(tuple(X_train[idx.item()] for idx in batch), y) for batch, y in train_loader], epochs=100)
+    train_model(model, train_loader, epochs=100)
 
     model.eval()
     with torch.no_grad():
         y_pred = []
         for tree_tensors in X_test:
             tree_tensors = tuple(t.to(device) if isinstance(t, torch.Tensor) else t for t in tree_tensors)
-            pred = model(tree_tensors)
+            pred = model((tree_tensors[0],) + tree_tensors[1:])  # Wrap tree in a tuple for batch dimension
             y_pred.append(pred.item())
         y_pred = torch.tensor(y_pred).unsqueeze(-1)
         y_test_tensor = torch.FloatTensor(y_test).to(device)
