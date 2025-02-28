@@ -212,7 +212,7 @@ def load_halide_dataset(data_dir="synthetic_data"):
 
     return X_data, y_normalized, scaler_y
 
-# Custom Dataset to handle tree tensors
+# Custom Dataset
 class HalideDataset(Dataset):
     def __init__(self, X_data, y_data):
         self.X_data = X_data
@@ -224,19 +224,26 @@ class HalideDataset(Dataset):
     def __getitem__(self, idx):
         return self.X_data[idx], self.y_data[idx]
 
-# Collate function to batch tree tensors
+# Collate function with NumPy conversion
 def collate_fn(batch):
     trees, comps_first, comps_vectors, comps_third, loops, exprs, y = [], [], [], [], [], [], []
     for tree_tensors, y_val in batch:
         tree, first, vectors, third, loop, expr = tree_tensors
         trees.append(tree)
-        comps_first.append(first)
-        comps_vectors.append(vectors)
-        comps_third.append(third)
-        loops.append(loop)
-        exprs.append(expr)
+        comps_first.append(first.numpy())  # Convert to NumPy
+        comps_vectors.append(vectors.numpy())
+        comps_third.append(third.numpy())
+        loops.append(loop.numpy())
+        exprs.append(expr.numpy())
         y.append(y_val)
-    return (trees, torch.cat(comps_first, dim=0), torch.cat(comps_vectors, dim=0), torch.cat(comps_third, dim=0), torch.cat(loops, dim=0), torch.cat(exprs, dim=0)), torch.tensor(y)
+    return (
+        trees,
+        torch.from_numpy(np.stack(comps_first, axis=0)),
+        torch.from_numpy(np.stack(comps_vectors, axis=0)),
+        torch.from_numpy(np.stack(comps_third, axis=0)),
+        torch.from_numpy(np.stack(loops, axis=0)),
+        torch.from_numpy(np.stack(exprs, axis=0))
+    ), torch.tensor(y, dtype=torch.float32)
 
 # Recursive LSTM Model
 class Model_Recursive_LSTM_v2(nn.Module):
@@ -319,7 +326,7 @@ class Model_Recursive_LSTM_v2(nn.Module):
         return x
 
     def forward(self, tree_tensors):
-        tree, comps_tensor_first_part, comps_tensor_vectors, comps_tensor_third_part, loops_tensor, functions_comps_expr_tree = tree_tensors
+        trees, comps_tensor_first_part, comps_tensor_vectors, comps_tensor_third_part, loops_tensor, functions_comps_expr_tree = tree_tensors
         
         batch_size, num_comps, len_sequence, len_vector = functions_comps_expr_tree.shape
         x = functions_comps_expr_tree.view(batch_size * num_comps, len_sequence, len_vector)
@@ -328,20 +335,25 @@ class Model_Recursive_LSTM_v2(nn.Module):
         
         batch_size, num_comps, __dict__ = comps_tensor_first_part.shape
         first_part = comps_tensor_first_part.to(self.device).view(batch_size * num_comps, -1)
-        vectors = comps_tensor_vectors.to(self.device)
-        third_part = comps_tensor_third_part.to(self.device).view(batch_size * num_comps, -1)
+        vectors = comps_tensor_vectors.to(self.device)  # Shape: (batch_size, num_comps, MAX_NUM_TRANSFORMATIONS * MAX_TAGS)
         
-        vectors = self.encode_vectors(vectors)
+        # Reshape vectors to separate transformations and tags
+        vectors = vectors.view(batch_size * num_comps, MAX_NUM_TRANSFORMATIONS, MAX_TAGS)
+        vectors = self.encode_vectors(vectors)  # Now processes (batch_size * num_comps, MAX_NUM_TRANSFORMATIONS, MAX_TAGS)
         _, (prog_embedding, _) = self.transformation_vectors_embed(vectors)
         prog_embedding = prog_embedding.permute(1, 0, 2).reshape(batch_size * num_comps, -1)
         
+        third_part = comps_tensor_third_part.to(self.device).view(batch_size * num_comps, -1)
         x = torch.cat((first_part, prog_embedding, third_part, expr_embedding), dim=1).view(batch_size, num_comps, -1)
         for i in range(len(self.comp_embedding_layers)):
             x = self.comp_embedding_layers[i](x)
             x = self.comp_embedding_dropouts[i](self.ELU(x))
         comps_embeddings = x
         
-        roots_list = [self.get_hidden_state(root, comps_embeddings, loops_tensor) for root in tree[0]]  # tree is a list of trees per batch
+        # Handle batch of trees
+        roots_list = []
+        for tree in trees:  # Iterate over batch of trees
+            roots_list.extend([self.get_hidden_state(root, comps_embeddings, loops_tensor) for root in tree["roots"]])
         roots_tensor = torch.cat(roots_list, 1)
         lstm_out, (roots_h_n, _) = self.roots_lstm(roots_tensor)
         roots_h_n = roots_h_n.permute(1, 0, 2)
@@ -351,7 +363,7 @@ class Model_Recursive_LSTM_v2(nn.Module):
             x = self.regression_layers[i](x)
             x = self.regression_dropouts[i](self.ELU(x))
         out = self.predict(x)
-        return self.LeakyReLU(out[:, 0, 0])
+        return self.LeakyReLU(out[:, 0])
 
 # Training function
 def train_model(model, train_loader, epochs=100):
@@ -396,7 +408,7 @@ def predict_halide_speedup(data_dir="synthetic_data"):
         y_pred = []
         for tree_tensors in X_test:
             tree_tensors = tuple(t.to(device) if isinstance(t, torch.Tensor) else t for t in tree_tensors)
-            pred = model((tree_tensors[0],) + tree_tensors[1:])  # Wrap tree in a tuple for batch dimension
+            pred = model((tree_tensors[0],) + tree_tensors[1:])  # Single tree case
             y_pred.append(pred.item())
         y_pred = torch.tensor(y_pred).unsqueeze(-1)
         y_test_tensor = torch.FloatTensor(y_test).to(device)
