@@ -188,9 +188,10 @@ def get_halide_schedule_representation(program_dict, tree, comps_repr_templates,
     comps_tensor_third_part = comps_tensor[:, first_part_size + MAX_NUM_TRANSFORMATIONS * MAX_TAGS:]
 
     loops_tensor = torch.FloatTensor([[float(x) if not isinstance(x, str) else 0.0 for x in loops_repr[0]]])
-    functions_comps_expr_tree = torch.zeros(MAX_NODES, MAX_EXPR_LEN, 11)  # Remove extra batch dim
+    functions_comps_expr_tree = torch.zeros(MAX_NODES, MAX_EXPR_LEN, 11)
 
-    return (tree, comps_tensor_first_part.unsqueeze(0), comps_tensor_vectors.unsqueeze(0), comps_tensor_third_part.unsqueeze(0), loops_tensor.unsqueeze(0), functions_comps_expr_tree.unsqueeze(0)), float(exec_time)
+    # Remove .unsqueeze(0) to let collate_fn handle batching
+    return (tree, comps_tensor_first_part, comps_tensor_vectors, comps_tensor_third_part, loops_tensor, functions_comps_expr_tree), float(exec_time)
 
 # Load and preprocess Halide dataset
 def load_halide_dataset(data_dir="synthetic_data"):
@@ -235,7 +236,7 @@ def collate_fn(batch):
         comps_third.append(third.numpy())
         loops.append(loop.numpy())
         exprs.append(expr.numpy())
-        y.append(y_val.item())  # Extract scalar from 1-element array
+        y.append(y_val.item())
     return (
         trees,
         torch.from_numpy(np.stack(comps_first, axis=0)),
@@ -328,12 +329,12 @@ class Model_Recursive_LSTM_v2(nn.Module):
     def forward(self, tree_tensors):
         trees, comps_tensor_first_part, comps_tensor_vectors, comps_tensor_third_part, loops_tensor, functions_comps_expr_tree = tree_tensors
         
-        batch_size, num_comps, len_sequence, len_vector = functions_comps_expr_tree.squeeze(1).shape  # Squeeze out extra dim
+        batch_size, num_comps, len_sequence, len_vector = functions_comps_expr_tree.shape
         x = functions_comps_expr_tree.view(batch_size * num_comps, len_sequence, len_vector)
         _, (expr_embedding, _) = self.exprs_embed(x)
         expr_embedding = expr_embedding.permute(1, 0, 2).reshape(batch_size * num_comps, -1)
         
-        batch_size, num_comps, __dict__ = comps_tensor_first_part.shape
+        batch_size, num_comps, feature_size = comps_tensor_first_part.shape  # Corrected unpacking
         first_part = comps_tensor_first_part.to(self.device).view(batch_size * num_comps, -1)
         vectors = comps_tensor_vectors.to(self.device)
         
@@ -406,7 +407,7 @@ def predict_halide_speedup(data_dir="synthetic_data"):
         y_pred = []
         for tree_tensors in X_test:
             tree_tensors = tuple(t.to(device) if isinstance(t, torch.Tensor) else t for t in tree_tensors)
-            pred = model([tree_tensors[0]] + list(tree_tensors[1:]))  # Wrap tree in list for consistency
+            pred = model([tree_tensors[0]] + list(tree_tensors[1:]))
             y_pred.append(pred.item())
         y_pred = torch.tensor(y_pred).unsqueeze(-1)
         y_test_tensor = torch.FloatTensor(y_test).to(device)
