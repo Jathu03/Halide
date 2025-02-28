@@ -51,7 +51,7 @@ def get_halide_representation_template(program_dict):
                 in_degree[dep] -= 1
                 if in_degree[dep] == 0:
                     queue.append(dep)
-        return order
+        return order[:MAX_NODES]  # Cap at MAX_NODES
 
     comp_order = topological_sort()
 
@@ -67,7 +67,7 @@ def get_halide_representation_template(program_dict):
                 "has_comps": True
             }
             for dep in dependents[comp_name]:
-                if dep not in seen:
+                if dep not in seen and len(seen) < MAX_NODES:
                     child = {
                         "loop_name": f"L{len(tree['roots'])}-{comp_name}",
                         "loop_index": torch.tensor(len(tree["roots"]) + 1),
@@ -79,6 +79,8 @@ def get_halide_representation_template(program_dict):
                     seen.add(dep)
             tree["roots"].append(root)
             seen.add(comp_name)
+            if len(seen) >= MAX_NODES:
+                break
 
     comps_repr_templates = []
     comps_indices_dict = {}
@@ -86,7 +88,7 @@ def get_halide_representation_template(program_dict):
     loops_repr_templates = []
     loops_indices_dict = {}
 
-    for comp_idx, node_name in enumerate(node_dict.keys()):
+    for comp_idx, node_name in enumerate(list(node_dict.keys())[:MAX_NODES]):  # Limit to MAX_NODES
         node = node_dict[node_name]
         sched = sched_dict.get(node_name, {})
 
@@ -137,9 +139,9 @@ def get_halide_representation_template(program_dict):
             loops_indices_dict[element] = (0, j)
 
     for root in tree["roots"]:
-        root["computations_indices"] = torch.tensor([comps_indices_dict[name] for name in root["computations_list"]])
+        root["computations_indices"] = torch.tensor([comps_indices_dict[name] for name in root["computations_list"] if name in comps_indices_dict])
         for child in root["child_list"]:
-            child["computations_indices"] = torch.tensor([comps_indices_dict[name] for name in child["computations_list"]])
+            child["computations_indices"] = torch.tensor([comps_indices_dict[name] for name in child["computations_list"] if name in comps_indices_dict])
 
     return tree, comps_repr_templates, loops_repr_templates, comps_indices_dict, comps_placeholders_indices_dict, loops_indices_dict
 
@@ -154,7 +156,7 @@ def get_halide_schedule_representation(program_dict, tree, comps_repr_templates,
     comps_repr = [list(template) for template in comps_repr_templates]
     loops_repr = [list(template) for template in loops_repr_templates]
 
-    for comp_idx, node_name in enumerate(node_dict.keys()):
+    for comp_idx, node_name in enumerate(list(node_dict.keys())[:MAX_NODES]):
         sched = sched_dict.get(node_name, {})
         c_code = f"C{comp_idx}"
 
@@ -190,7 +192,6 @@ def get_halide_schedule_representation(program_dict, tree, comps_repr_templates,
     loops_tensor = torch.FloatTensor([[float(x) if not isinstance(x, str) else 0.0 for x in loops_repr[0]]])
     functions_comps_expr_tree = torch.zeros(MAX_NODES, MAX_EXPR_LEN, 11)
 
-    # Remove .unsqueeze(0) to let collate_fn handle batching
     return (tree, comps_tensor_first_part, comps_tensor_vectors, comps_tensor_third_part, loops_tensor, functions_comps_expr_tree), float(exec_time)
 
 # Load and preprocess Halide dataset
@@ -314,8 +315,14 @@ class Model_Recursive_LSTM_v2(nn.Module):
         nodes_h_n = torch.unsqueeze(self.no_nodes_tensor, 0).expand(comps_embeddings.shape[0], -1, -1) if not nodes_list else self.nodes_lstm(torch.cat(nodes_list, 1))[1][0].permute(1, 0, 2)
         
         if node["has_comps"]:
-            selected_comps_tensor = torch.index_select(comps_embeddings, 1, node["computations_indices"].to(self.device))
-            comps_h_n = self.comps_lstm(selected_comps_tensor)[1][0].permute(1, 0, 2)
+            indices = node["computations_indices"].to(self.device)
+            if indices.max() >= comps_embeddings.shape[1]:
+                indices = indices[indices < comps_embeddings.shape[1]]  # Clamp indices
+            if len(indices) > 0:  # Ensure there are valid indices
+                selected_comps_tensor = torch.index_select(comps_embeddings, 1, indices)
+                comps_h_n = self.comps_lstm(selected_comps_tensor)[1][0].permute(1, 0, 2)
+            else:
+                comps_h_n = torch.unsqueeze(self.no_comps_tensor, 0).expand(comps_embeddings.shape[0], -1, -1)
         else:
             comps_h_n = torch.unsqueeze(self.no_comps_tensor, 0).expand(comps_embeddings.shape[0], -1, -1)
         
@@ -334,7 +341,7 @@ class Model_Recursive_LSTM_v2(nn.Module):
         _, (expr_embedding, _) = self.exprs_embed(x)
         expr_embedding = expr_embedding.permute(1, 0, 2).reshape(batch_size * num_comps, -1)
         
-        batch_size, num_comps, feature_size = comps_tensor_first_part.shape  # Corrected unpacking
+        batch_size, num_comps, feature_size = comps_tensor_first_part.shape
         first_part = comps_tensor_first_part.to(self.device).view(batch_size * num_comps, -1)
         vectors = comps_tensor_vectors.to(self.device)
         
@@ -428,4 +435,6 @@ def predict_halide_speedup(data_dir="synthetic_data"):
                   f"Predicted Time: {pred_time:.2f} ms, Speedup: {speedup:.2f}x")
 
 if __name__ == "__main__":
+    # For debugging CUDA errors
+    os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
     predict_halide_speedup(data_dir="synthetic_data")
