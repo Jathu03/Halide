@@ -11,12 +11,12 @@ from collections import defaultdict
 # Device configuration
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# Constants
+# Constants (aligned with Tiramisu model where applicable)
 MAX_NODES = 20
 MAX_LOOPS = 5
 MAX_NUM_TRANSFORMATIONS = 4
-MAX_TAGS = 8
-MAX_EXPR_LEN = 11
+MAX_TAGS = 16  # From modeling.py context
+MAX_EXPR_LEN = 66  # From data_utils.py
 
 # Load JSON data
 def load_data(file_path):
@@ -24,15 +24,17 @@ def load_data(file_path):
         data = json.load(f)
     return data
 
-# Create a tree-like representation from Halide graph
-def get_halide_representation_template(program_dict):
+# Convert Halide graph to tree representation
+def halide_to_tree_representation(program_dict):
     nodes = program_dict["programming_details"]["Nodes"]
     edges = program_dict["programming_details"]["Edges"]
     scheduling = program_dict["scheduling_data"]
 
     node_dict = {node["Name"]: node["Details"] for node in nodes}
     sched_dict = {item["Name"]: item["Details"]["scheduling_feature"] for item in scheduling if "Name" in item}
+    exec_time = next(item["value"] for item in scheduling if item.get("name") == "total_execution_time_ms")
 
+    # Build dependency graph
     dependents = defaultdict(list)
     dependents_of = defaultdict(list)
     for edge in edges:
@@ -40,55 +42,66 @@ def get_halide_representation_template(program_dict):
         dependents[from_node].append(to_node)
         dependents_of[to_node].append(from_node)
 
+    # Topological sort for ordering
     def topological_sort():
         in_degree = {n: len(dependents_of[n]) for n in node_dict}
         queue = [n for n in node_dict if in_degree[n] == 0]
         order = []
-        while queue:
+        while queue and len(order) < MAX_NODES:
             node = queue.pop(0)
             order.append(node)
             for dep in dependents[node]:
                 in_degree[dep] -= 1
                 if in_degree[dep] == 0:
                     queue.append(dep)
-        return order[:MAX_NODES]  # Cap at MAX_NODES
+        return order
 
     comp_order = topological_sort()
 
+    # Build tree
     tree = {"roots": []}
     seen = set()
-    for comp_name in comp_order:
+    comp_indices_dict = {}
+    loop_idx = 0
+
+    for idx, comp_name in enumerate(comp_order):
         if comp_name not in seen:
+            comp_indices_dict[comp_name] = idx
             root = {
-                "loop_name": f"L{len(tree['roots'])}",
-                "loop_index": torch.tensor(len(tree["roots"])),
+                "loop_name": f"L{loop_idx}",
+                "loop_index": torch.tensor(loop_idx),
                 "computations_list": [comp_name],
                 "child_list": [],
                 "has_comps": True
             }
+            loop_idx += 1
             for dep in dependents[comp_name]:
-                if dep not in seen and len(seen) < MAX_NODES:
+                if dep not in seen and len(seen) < MAX_NODES and loop_idx < MAX_LOOPS:
+                    comp_indices_dict[dep] = len(comp_indices_dict)
                     child = {
-                        "loop_name": f"L{len(tree['roots'])}-{comp_name}",
-                        "loop_index": torch.tensor(len(tree["roots"]) + 1),
+                        "loop_name": f"L{loop_idx}",
+                        "loop_index": torch.tensor(loop_idx),
                         "computations_list": [dep],
                         "child_list": [],
                         "has_comps": True
                     }
                     root["child_list"].append(child)
                     seen.add(dep)
+                    loop_idx += 1
             tree["roots"].append(root)
             seen.add(comp_name)
-            if len(seen) >= MAX_NODES:
+            if len(seen) >= MAX_NODES or loop_idx >= MAX_LOOPS:
                 break
 
-    comps_repr_templates = []
-    comps_indices_dict = {}
-    comps_placeholders_indices_dict = {}
-    loops_repr_templates = []
-    loops_indices_dict = {}
+    # Assign computation indices
+    for root in tree["roots"]:
+        root["computations_indices"] = torch.tensor([comp_indices_dict[name] for name in root["computations_list"]])
+        for child in root["child_list"]:
+            child["computations_indices"] = torch.tensor([comp_indices_dict[name] for name in child["computations_list"]])
 
-    for comp_idx, node_name in enumerate(list(node_dict.keys())[:MAX_NODES]):  # Limit to MAX_NODES
+    # Computation representation
+    comps_repr = []
+    for idx, node_name in enumerate(comp_order):
         node = node_dict[node_name]
         sched = sched_dict.get(node_name, {})
 
@@ -99,7 +112,7 @@ def get_halide_representation_template(program_dict):
                 key, value = parts[0].strip(), int(parts[1].strip().split()[0])
                 op_hist[key] = value
 
-        comp_repr = [
+        comp_features = [
             op_hist.get("Add", 0),
             op_hist.get("Mul", 0),
             op_hist.get("Div", 0),
@@ -110,89 +123,41 @@ def get_halide_representation_template(program_dict):
             1 if any(e["To"] == f"{node_name}.update(0)" for e in edges) else 0
         ]
 
-        c_code = f"C{comp_idx}"
-        comp_repr.append(f"{c_code}-TransformTagsStart")
-        comp_repr.extend(["T"] * (MAX_NUM_TRANSFORMATIONS * MAX_TAGS - 2))
-        comp_repr.append(f"{c_code}-TransformTagsEnd")
+        # Transformation tags (placeholder, no detailed transformations in Halide data)
+        comp_features.extend([0] * MAX_NUM_TRANSFORMATIONS * MAX_TAGS)
 
-        comps_repr_templates.append(comp_repr)
-        comps_indices_dict[node_name] = comp_idx
-        for j, element in enumerate(comp_repr):
-            if isinstance(element, str):
-                comps_placeholders_indices_dict[element] = (comp_idx, j)
+        comps_repr.append(comp_features)
 
-    loop_repr = []
-    for loop_idx in range(MAX_LOOPS):
-        l_code = f"L{loop_idx}"
-        loop_repr.extend([
-            f"{l_code}-Parallel",
-            f"{l_code}-Tile",
-            f"{l_code}-TileFactor",
-            f"{l_code}-Vectorize",
-            f"{l_code}-VectorSize",
-            f"{l_code}-Unroll",
-            f"{l_code}-UnrollFactor"
-        ])
-    loops_repr_templates.append(loop_repr)
-    for j, element in enumerate(loop_repr):
-        if isinstance(element, str):
-            loops_indices_dict[element] = (0, j)
-
-    for root in tree["roots"]:
-        root["computations_indices"] = torch.tensor([comps_indices_dict[name] for name in root["computations_list"] if name in comps_indices_dict])
-        for child in root["child_list"]:
-            child["computations_indices"] = torch.tensor([comps_indices_dict[name] for name in child["computations_list"] if name in comps_indices_dict])
-
-    return tree, comps_repr_templates, loops_repr_templates, comps_indices_dict, comps_placeholders_indices_dict, loops_indices_dict
-
-# Fill the template with schedule-specific features
-def get_halide_schedule_representation(program_dict, tree, comps_repr_templates, loops_repr_templates, comps_indices_dict, comps_placeholders_indices_dict, loops_indices_dict):
-    nodes = program_dict["programming_details"]["Nodes"]
-    scheduling = program_dict["scheduling_data"]
-    node_dict = {node["Name"]: node["Details"] for node in nodes}
-    sched_dict = {item["Name"]: item["Details"]["scheduling_feature"] for item in scheduling if "Name" in item}
-    exec_time = next(item["value"] for item in scheduling if item.get("name") == "total_execution_time_ms")
-
-    comps_repr = [list(template) for template in comps_repr_templates]
-    loops_repr = [list(template) for template in loops_repr_templates]
-
-    for comp_idx, node_name in enumerate(list(node_dict.keys())[:MAX_NODES]):
-        sched = sched_dict.get(node_name, {})
-        c_code = f"C{comp_idx}"
-
-        for loop_idx in range(min(MAX_LOOPS, 2)):
-            l_code = f"L{loop_idx}"
-            loops_repr[0][loops_indices_dict[f"{l_code}-Parallel"][1]] = 1 if sched.get("inner_parallelism", 1.0) > 1.0 else 0
-            loops_repr[0][loops_indices_dict[f"{l_code}-Tile"][1]] = 1 if sched.get("unrolled_loop_extent", 1.0) > 1.0 else 0
-            loops_repr[0][loops_indices_dict[f"{l_code}-TileFactor"][1]] = sched.get("unrolled_loop_extent", 1.0)
-            loops_repr[0][loops_indices_dict[f"{l_code}-Vectorize"][1]] = 1 if sched.get("vector_size", 16.0) > 16.0 else 0
-            loops_repr[0][loops_indices_dict[f"{l_code}-VectorSize"][1]] = sched.get("vector_size", 16.0)
-            loops_repr[0][loops_indices_dict[f"{l_code}-Unroll"][1]] = 1 if sched.get("unrolled_loop_extent", 1.0) > 1.0 else 0
-            loops_repr[0][loops_indices_dict[f"{l_code}-UnrollFactor"][1]] = sched.get("unrolled_loop_extent", 1.0)
-
-        tags = [0] * (MAX_NUM_TRANSFORMATIONS * MAX_TAGS)
-        tags_start = comps_placeholders_indices_dict[f"{c_code}-TransformTagsStart"]
-        tags_end = comps_placeholders_indices_dict[f"{c_code}-TransformTagsEnd"]
-        comps_repr[comp_idx][tags_start[1]:tags_end[1] + 1] = tags
-
-    comps_padded = []
-    for comp in comps_repr:
-        comps_padded.append([float(x) if not isinstance(x, str) else 0.0 for x in comp])
-    if len(comps_padded) < MAX_NODES:
-        comps_padded.extend([[0.0] * len(comps_padded[0])] * (MAX_NODES - len(comps_padded)))
-    elif len(comps_padded) > MAX_NODES:
-        comps_padded = comps_padded[:MAX_NODES]
-
-    comps_tensor = torch.FloatTensor(comps_padded)
+    if len(comps_repr) < MAX_NODES:
+        comps_repr.extend([[0] * len(comps_repr[0])] * (MAX_NODES - len(comps_repr)))
+    comps_tensor = torch.FloatTensor(comps_repr)
     first_part_size = 8
     comps_tensor_first_part = comps_tensor[:, :first_part_size]
     comps_tensor_vectors = comps_tensor[:, first_part_size:first_part_size + MAX_NUM_TRANSFORMATIONS * MAX_TAGS]
     comps_tensor_third_part = comps_tensor[:, first_part_size + MAX_NUM_TRANSFORMATIONS * MAX_TAGS:]
 
-    loops_tensor = torch.FloatTensor([[float(x) if not isinstance(x, str) else 0.0 for x in loops_repr[0]]])
+    # Loops representation
+    loops_repr = []
+    for loop_idx in range(MAX_LOOPS):
+        l_code = f"L{loop_idx}"
+        loop_features = [
+            1 if sched.get("inner_parallelism", 1.0) > 1.0 else 0,
+            1 if sched.get("unrolled_loop_extent", 1.0) > 1.0 else 0,
+            sched.get("unrolled_loop_extent", 1.0),
+            1 if sched.get("vector_size", 16.0) > 16.0 else 0,
+            sched.get("vector_size", 16.0),
+            1 if sched.get("unrolled_loop_extent", 1.0) > 1.0 else 0,
+            sched.get("unrolled_loop_extent", 1.0)
+        ]
+        loops_repr.append(loop_features)
+    if len(loops_repr) < MAX_LOOPS:
+        loops_repr.extend([[0] * 7] * (MAX_LOOPS - len(loops_repr)))
+    loops_tensor = torch.FloatTensor(loops_repr)
+
+    # Expressions (placeholder, no expression data in Halide synthetic data)
     functions_comps_expr_tree = torch.zeros(MAX_NODES, MAX_EXPR_LEN, 11)
 
-    return (tree, comps_tensor_first_part, comps_tensor_vectors, comps_tensor_third_part, loops_tensor, functions_comps_expr_tree), float(exec_time)
+    return (tree, comps_tensor_first_part, comps_tensor_vectors, comps_tensor_third_part, loops_tensor, functions_comps_expr_tree), exec_time
 
 # Load and preprocess Halide dataset
 def load_halide_dataset(data_dir="synthetic_data"):
@@ -203,8 +168,7 @@ def load_halide_dataset(data_dir="synthetic_data"):
         if filename.endswith(".json"):
             file_path = os.path.join(data_dir, filename)
             program_dict = load_data(file_path)
-            tree, comps_tmpl, loops_tmpl, _, comps_ph_dict, loops_ph_dict = get_halide_representation_template(program_dict)
-            tree_tensors, exec_time = get_halide_schedule_representation(program_dict, tree, comps_tmpl, loops_tmpl, {}, comps_ph_dict, loops_ph_dict)
+            tree_tensors, exec_time = halide_to_tree_representation(program_dict)
             X_data.append(tree_tensors)
             y_data.append(exec_time)
 
@@ -226,7 +190,7 @@ class HalideDataset(Dataset):
     def __getitem__(self, idx):
         return self.X_data[idx], self.y_data[idx]
 
-# Collate function with NumPy conversion
+# Collate function
 def collate_fn(batch):
     trees, comps_first, comps_vectors, comps_third, loops, exprs, y = [], [], [], [], [], [], []
     for tree_tensors, y_val in batch:
@@ -247,7 +211,7 @@ def collate_fn(batch):
         torch.from_numpy(np.stack(exprs, axis=0))
     ), torch.from_numpy(np.array(y, dtype=np.float32))
 
-# Recursive LSTM Model
+# Model from modeling.py
 class Model_Recursive_LSTM_v2(nn.Module):
     def __init__(
         self,
@@ -317,8 +281,8 @@ class Model_Recursive_LSTM_v2(nn.Module):
         if node["has_comps"]:
             indices = node["computations_indices"].to(self.device)
             if indices.max() >= comps_embeddings.shape[1]:
-                indices = indices[indices < comps_embeddings.shape[1]]  # Clamp indices
-            if len(indices) > 0:  # Ensure there are valid indices
+                indices = indices[indices < comps_embeddings.shape[1]]
+            if len(indices) > 0:
                 selected_comps_tensor = torch.index_select(comps_embeddings, 1, indices)
                 comps_h_n = self.comps_lstm(selected_comps_tensor)[1][0].permute(1, 0, 2)
             else:
@@ -405,7 +369,7 @@ def predict_halide_speedup(data_dir="synthetic_data"):
     train_dataset = HalideDataset(X_train, y_train)
     train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True, collate_fn=collate_fn)
 
-    input_size = X_data[0][1].shape[-1]
+    input_size = X_data[0][1].shape[-1]  # 8 from comp_features
     model = Model_Recursive_LSTM_v2(input_size=input_size, device=device).to(device)
     train_model(model, train_loader, epochs=100)
 
@@ -435,6 +399,5 @@ def predict_halide_speedup(data_dir="synthetic_data"):
                   f"Predicted Time: {pred_time:.2f} ms, Speedup: {speedup:.2f}x")
 
 if __name__ == "__main__":
-    # For debugging CUDA errors
-    os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
+    os.environ["CUDA_LAUNCH_BLOCKING"] = "1"  # For debugging CUDA errors
     predict_halide_speedup(data_dir="synthetic_data")
