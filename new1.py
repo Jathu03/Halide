@@ -235,4 +235,4 @@ def predict_halide_speedup(data_dir="synthetic_data"):
                   f"Predicted Time: {pred_time:.2f} ms, Speedup: {speedup:.2f}x")
 
 if __name__ == "__main__":
-    predict_halide_speedup(data_dir="synthetic_data")
+    predict_halide_speedup(data_dir="c1")
