@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 # Constants
 MAX_NODES = 30  # Max number of nodes (functions) in a program
-MAX_FEATURES = 50  # Max features per node (adjust based on extracted features)
+MAX_FEATURES = 37  # Adjusted: 9 scheduling + 8 memory + 20 op histogram
 SEQUENCE_LENGTH = MAX_NODES  # Treat each node as a timestep in the sequence
 
 # Device configuration
@@ -33,7 +33,6 @@ def extract_node_features(node):
             sched.get("working_set_at_root", 0.0),
         ])
     else:
-        # For nodes without scheduling features (e.g., total_execution_time_ms)
         features.extend([0.0] * 9)  # Placeholder zeros
 
     # Memory access patterns (flatten and truncate/pad to 8 values)
@@ -63,9 +62,9 @@ def get_halide_representation(program_dict):
     exec_time = None
 
     for node in nodes:
-        if node["Name"] == "total_execution_time_ms":
+        if "name" in node and node["name"] == "total_execution_time_ms":
             exec_time = node["value"] / 1000.0  # Convert ms to seconds
-        else:
+        elif "Name" in node:  # Only process nodes with a "Name" (skip metadata nodes without features)
             node_features = extract_node_features(node)
             features_list.append(node_features)
 
@@ -89,29 +88,49 @@ def get_halide_representation(program_dict):
 def load_halide_dataset(data_dir, baseline_time=1.0):
     X_data = []
     y_data = []
+    files_processed = 0
     
-    # First pass: determine baseline (max execution time across unscheduled programs if available)
-    for filename in os.listdir(data_dir):
-        if filename.endswith(".json"):
-            with open(os.path.join(data_dir, filename), "r") as f:
-                program_dict = json.load(f)
-                _, exec_time = get_halide_representation(program_dict)
-                if exec_time is not None and exec_time > baseline_time:
-                    baseline_time = exec_time
+    # Check if directory exists and contains JSON files
+    if not os.path.exists(data_dir):
+        raise FileNotFoundError(f"Directory '{data_dir}' does not exist.")
+    json_files = [f for f in os.listdir(data_dir) if f.endswith(".json")]
+    if not json_files:
+        raise ValueError(f"No JSON files found in '{data_dir}'.")
+
+    # First pass: determine baseline (max execution time)
+    print(f"Scanning {len(json_files)} JSON files for baseline time...")
+    for filename in json_files:
+        with open(os.path.join(data_dir, filename), "r") as f:
+            program_dict = json.load(f)
+            _, exec_time = get_halide_representation(program_dict)
+            if exec_time is not None:
+                baseline_time = max(baseline_time, exec_time)
+                files_processed += 1
+            else:
+                print(f"Warning: No execution time found in '{filename}'")
+
+    if files_processed == 0:
+        raise ValueError(f"No valid execution times found in any JSON files in '{data_dir}'.")
+    print(f"Baseline time determined: {baseline_time:.4f} seconds")
 
     # Second pass: compute speedup
-    for filename in os.listdir(data_dir):
-        if filename.endswith(".json"):
-            with open(os.path.join(data_dir, filename), "r") as f:
-                program_dict = json.load(f)
-                features_tensor, exec_time = get_halide_representation(program_dict)
-                if exec_time is not None:
-                    speedup = baseline_time / exec_time  # Speedup = baseline / current
-                    X_data.append(features_tensor.numpy())
-                    y_data.append(speedup)
+    for filename in json_files:
+        with open(os.path.join(data_dir, filename), "r") as f:
+            program_dict = json.load(f)
+            features_tensor, exec_time = get_halide_representation(program_dict)
+            if exec_time is not None:
+                speedup = baseline_time / exec_time
+                X_data.append(features_tensor.numpy())
+                y_data.append(speedup)
+            else:
+                print(f"Skipping '{filename}' due to missing execution time")
+
+    if not X_data:
+        raise ValueError(f"No valid data points collected from '{data_dir}'. All files may lack execution times.")
 
     X_data = np.array(X_data)  # Shape: (samples, MAX_NODES, MAX_FEATURES)
     y_data = np.array(y_data)  # Shape: (samples,)
+    print(f"Collected {len(X_data)} samples with shape {X_data.shape}")
 
     # Normalize features
     scaler_X = StandardScaler()
