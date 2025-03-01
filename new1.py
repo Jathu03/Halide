@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 # Constants
 MAX_NODES = 30  # Max number of nodes (functions) in a program
-MAX_FEATURES = 37  # Adjusted: 9 scheduling + 8 memory + 20 op histogram
+MAX_FEATURES = 37  # 9 scheduling + 8 memory + 20 op histogram
 SEQUENCE_LENGTH = MAX_NODES  # Treat each node as a timestep in the sequence
 
 # Device configuration
@@ -33,13 +33,13 @@ def extract_node_features(node):
             sched.get("working_set_at_root", 0.0),
         ])
     else:
-        features.extend([0.0] * 9)  # Placeholder zeros
+        features.extend([0.0] * 9)
 
     # Memory access patterns (flatten and truncate/pad to 8 values)
     mem_patterns = node["Details"]["Memory access patterns"]
     mem_values = []
     for pattern in mem_patterns:
-        values = [float(x) for x in pattern.split()[-4:]]  # Last 4 values per line
+        values = [float(x) for x in pattern.split()[-4:]]
         mem_values.extend(values)
     mem_values = mem_values[:8] if len(mem_values) >= 8 else mem_values + [0.0] * (8 - len(mem_values))
     features.extend(mem_values)
@@ -57,16 +57,27 @@ def extract_node_features(node):
 
 # Process program JSON into a feature tensor and extract execution time
 def get_halide_representation(program_dict):
-    nodes = program_dict["programming_details"]["Nodes"]
+    nodes = program_dict.get("programming_details", {}).get("Nodes", [])
     features_list = []
     exec_time = None
 
+    if not nodes:
+        print("Warning: No 'Nodes' found in program_dict")
+        return None, None
+
     for node in nodes:
-        if "name" in node and node["name"] == "total_execution_time_ms":
-            exec_time = node["value"] / 1000.0  # Convert ms to seconds
-        elif "Name" in node:  # Only process nodes with a "Name" (skip metadata nodes without features)
-            node_features = extract_node_features(node)
-            features_list.append(node_features)
+        if isinstance(node, dict):
+            # Check for execution time node
+            if node.get("name") == "total_execution_time_ms" and "value" in node:
+                exec_time = node["value"] / 1000.0  # Convert ms to seconds
+            # Process computation nodes
+            elif "Name" in node and "Details" in node:
+                node_features = extract_node_features(node)
+                features_list.append(node_features)
+
+    if not features_list:
+        print("Warning: No computation nodes with 'Name' and 'Details' found")
+        return None, exec_time
 
     # Pad or truncate to MAX_NODES
     if len(features_list) < MAX_NODES:
@@ -100,33 +111,42 @@ def load_halide_dataset(data_dir, baseline_time=1.0):
     # First pass: determine baseline (max execution time)
     print(f"Scanning {len(json_files)} JSON files for baseline time...")
     for filename in json_files:
-        with open(os.path.join(data_dir, filename), "r") as f:
-            program_dict = json.load(f)
-            _, exec_time = get_halide_representation(program_dict)
-            if exec_time is not None:
-                baseline_time = max(baseline_time, exec_time)
-                files_processed += 1
-            else:
-                print(f"Warning: No execution time found in '{filename}'")
+        filepath = os.path.join(data_dir, filename)
+        with open(filepath, "r") as f:
+            try:
+                program_dict = json.load(f)
+                features_tensor, exec_time = get_halide_representation(program_dict)
+                if exec_time is not None:
+                    baseline_time = max(baseline_time, exec_time)
+                    files_processed += 1
+                else:
+                    print(f"Warning: No execution time found in '{filename}'")
+            except json.JSONDecodeError:
+                print(f"Error: Could not decode JSON in '{filename}'")
 
     if files_processed == 0:
-        raise ValueError(f"No valid execution times found in any JSON files in '{data_dir}'.")
-    print(f"Baseline time determined: {baseline_time:.4f} seconds")
+        raise ValueError(f"No valid execution times found in any JSON files in '{data_dir}'. Check if 'total_execution_time_ms' is present.")
+
+    print(f"Baseline time determined: {baseline_time:.4f} seconds, Files with execution time: {files_processed}")
 
     # Second pass: compute speedup
     for filename in json_files:
-        with open(os.path.join(data_dir, filename), "r") as f:
-            program_dict = json.load(f)
-            features_tensor, exec_time = get_halide_representation(program_dict)
-            if exec_time is not None:
-                speedup = baseline_time / exec_time
-                X_data.append(features_tensor.numpy())
-                y_data.append(speedup)
-            else:
-                print(f"Skipping '{filename}' due to missing execution time")
+        filepath = os.path.join(data_dir, filename)
+        with open(filepath, "r") as f:
+            try:
+                program_dict = json.load(f)
+                features_tensor, exec_time = get_halide_representation(program_dict)
+                if features_tensor is not None and exec_time is not None:
+                    speedup = baseline_time / exec_time
+                    X_data.append(features_tensor.numpy())
+                    y_data.append(speedup)
+                else:
+                    print(f"Skipping '{filename}': Missing features or execution time")
+            except json.JSONDecodeError:
+                print(f"Error: Could not decode JSON in '{filename}'")
 
     if not X_data:
-        raise ValueError(f"No valid data points collected from '{data_dir}'. All files may lack execution times.")
+        raise ValueError(f"No valid data points collected from '{data_dir}'. Ensure JSON files contain both computation nodes and execution times.")
 
     X_data = np.array(X_data)  # Shape: (samples, MAX_NODES, MAX_FEATURES)
     y_data = np.array(y_data)  # Shape: (samples,)
