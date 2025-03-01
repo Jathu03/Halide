@@ -1,0 +1,1820 @@
+{
+    "programming_details": {
+        "Edges": [
+            {
+                "Details": {
+                    "Footprint": [
+                        "    Min 0: casted._0.min",
+                        "    Max 0: casted._0.max",
+                        "    Min 1: casted._1.min",
+                        "    Max 1: casted._1.max",
+                        "    Min 2: casted._2.min",
+                        "    Max 2: casted._2.max"
+                    ],
+                    "Load Jacobians": [
+                        " 1   0   0  ",
+                        " 0   1   0  ",
+                        " 0   0   1  "
+                    ]
+                },
+                "From": "binary_op$2",
+                "Name": "binary_op$2 -> casted",
+                "To": "casted"
+            },
+            {
+                "Details": {
+                    "Footprint": [
+                        "    Min 0: binary_op$2._0.min",
+                        "    Max 0: binary_op$2._0.max",
+                        "    Min 1: binary_op$2._1.min",
+                        "    Max 1: binary_op$2._1.max",
+                        "    Min 2: binary_op$2._2.min",
+                        "    Max 2: binary_op$2._2.max"
+                    ],
+                    "Load Jacobians": [
+                        " 1   0   0  ",
+                        " 0   1   0  ",
+                        " 0   0   1  "
+                    ]
+                },
+                "From": "all_r$2",
+                "Name": "all_r$2 -> binary_op$2",
+                "To": "binary_op$2"
+            },
+            {
+                "Details": {
+                    "Footprint": [
+                        "    Min 0: binary_op$2._0.min",
+                        "    Max 0: binary_op$2._0.max",
+                        "    Min 1: binary_op$2._1.min",
+                        "    Max 1: binary_op$2._1.max",
+                        "    Min 2: binary_op$2._2.min",
+                        "    Max 2: binary_op$2._2.max"
+                    ],
+                    "Load Jacobians": [
+                        " 1   0   0  ",
+                        " 0   1   0  ",
+                        " 0   0   1  "
+                    ]
+                },
+                "From": "conv_r__1",
+                "Name": "conv_r__1 -> binary_op$2",
+                "To": "binary_op$2"
+            },
+            {
+                "Details": {
+                    "Footprint": [
+                        "    Min 0: conv_r__1._0.min",
+                        "    Max 0: conv_r__1._0.max",
+                        "    Min 1: (conv_r__1._1.min + conv_r__1.r102$x.min)",
+                        "    Max 1: (conv_r__1._1.max + conv_r__1.r102$x.max)",
+                        "    Min 2: conv_r__1._2.min",
+                        "    Max 2: conv_r__1._2.max"
+                    ],
+                    "Load Jacobians": [
+                        " 0   1   0   0  ",
+                        " 1   0   1   0  ",
+                        " 0   0   0   1  "
+                    ]
+                },
+                "From": "relu$1",
+                "Name": "relu$1 -> conv_r__1.update(0)",
+                "To": "conv_r__1.update(0)"
+            },
+            {
+                "Details": {
+                    "Footprint": [
+                        "    Min 0: all_r$2._0.min",
+                        "    Max 0: all_r$2._0.max",
+                        "    Min 1: all_r$2._1.min",
+                        "    Max 1: all_r$2._1.max",
+                        "    Min 2: all_r$2.r202$x.min",
+                        "    Max 2: all_r$2.r202$x.max"
+                    ],
+                    "Load Jacobians": [
+                        " 0   1   0   0  ",
+                        " 0   0   1   0  ",
+                        " 1   0   0   0  "
+                    ]
+                },
+                "From": "sliced",
+                "Name": "sliced -> all_r$2.update(0)",
+                "To": "all_r$2.update(0)"
+            },
+            {
+                "Details": {
+                    "Footprint": [
+                        "    Min 0: sliced._0.min",
+                        "    Max 0: sliced._0.max",
+                        "    Min 1: sliced._1.min",
+                        "    Max 1: sliced._1.max",
+                        "    Min 2: sliced._2.min",
+                        "    Max 2: sliced._2.max"
+                    ],
+                    "Load Jacobians": [
+                        " 1   0   0  ",
+                        " 0   1   0  ",
+                        " 0   0   1  "
+                    ]
+                },
+                "From": "all_r",
+                "Name": "all_r -> sliced",
+                "To": "sliced"
+            },
+            {
+                "Details": {
+                    "Footprint": [
+                        "    Min 0: sliced._0.min",
+                        "    Max 0: sliced._0.max",
+                        "    Min 1: sliced._1.min",
+                        "    Max 1: sliced._1.max"
+                    ],
+                    "Load Jacobians": [
+                        " 1   0   0  ",
+                        " 0   1   0  "
+                    ]
+                },
+                "From": "mirror_interior",
+                "Name": "mirror_interior -> sliced",
+                "To": "sliced"
+            },
+            {
+                "Details": {
+                    "Footprint": [
+                        "    Min 0: all_r._0.min",
+                        "    Max 0: all_r._0.max",
+                        "    Min 1: all_r._1.min",
+                        "    Max 1: all_r._1.max",
+                        "    Min 2: all_r.r168$x.min",
+                        "    Max 2: all_r.r168$x.max"
+                    ],
+                    "Load Jacobians": [
+                        " 0   1   0   0  ",
+                        " 0   0   1   0  ",
+                        " 1   0   0   0  "
+                    ]
+                },
+                "From": "downsampled_box__1",
+                "Name": "downsampled_box__1 -> all_r.update(0)",
+                "To": "all_r.update(0)"
+            },
+            {
+                "Details": {
+                    "Footprint": [
+                        "    Min 0: downsampled_box__1._0.min",
+                        "    Max 0: downsampled_box__1._0.max",
+                        "    Min 1: ((downsampled_box__1._1.min*16) + 1)",
+                        "    Max 1: ((downsampled_box__1._1.max*16) + 16)",
+                        "    Min 2: downsampled_box__1._2.min",
+                        "    Max 2: downsampled_box__1._2.max"
+                    ],
+                    "Load Jacobians": [
+                        " 1   0   0  ",
+                        " 0   16   0  ",
+                        " 0   0   1  "
+                    ]
+                },
+                "From": "upsampled_nn__1",
+                "Name": "upsampled_nn__1 -> downsampled_box__1",
+                "To": "downsampled_box__1"
+            },
+            {
+                "Details": {
+                    "Footprint": [
+                        "    Min 0: upsampled_nn__1._0.min",
+                        "    Max 0: upsampled_nn__1._0.max",
+                        "    Min 1: (upsampled_nn__1._1.min/16)",
+                        "    Max 1: (upsampled_nn__1._1.max/16)",
+                        "    Min 2: upsampled_nn__1._2.min",
+                        "    Max 2: upsampled_nn__1._2.max"
+                    ],
+                    "Load Jacobians": [
+                        " 1   0   0  ",
+                        " 0  1/16  0  ",
+                        " 0   0   1  "
+                    ]
+                },
+                "From": "relu$1",
+                "Name": "relu$1 -> upsampled_nn__1",
+                "To": "upsampled_nn__1"
+            },
+            {
+                "Details": {
+                    "Footprint": [
+                        "    Min 0: relu$1._0.min",
+                        "    Max 0: relu$1._0.max",
+                        "    Min 1: relu$1._1.min",
+                        "    Max 1: relu$1._1.max",
+                        "    Min 2: relu$1._2.min",
+                        "    Max 2: relu$1._2.max"
+                    ],
+                    "Load Jacobians": [
+                        " 1   0   0  ",
+                        " 0   1   0  ",
+                        " 0   0   1  "
+                    ]
+                },
+                "From": "relu",
+                "Name": "relu -> relu$1",
+                "To": "relu$1"
+            },
+            {
+                "Details": {
+                    "Footprint": [
+                        "    Min 0: relu._0.min",
+                        "    Max 0: relu._0.max",
+                        "    Min 1: relu._1.min",
+                        "    Max 1: relu._1.max",
+                        "    Min 2: relu._2.min",
+                        "    Max 2: relu._2.max"
+                    ],
+                    "Load Jacobians": [
+                        " 1   0   0  ",
+                        " 0   1   0  ",
+                        " 0   0   1  "
+                    ]
+                },
+                "From": "conv_r__0",
+                "Name": "conv_r__0 -> relu",
+                "To": "relu"
+            },
+            {
+                "Details": {
+                    "Footprint": [
+                        "    Min 0: (conv_r__0._0.min + conv_r__0.r85$x.min)",
+                        "    Max 0: (conv_r__0._0.max + conv_r__0.r85$x.max)",
+                        "    Min 1: conv_r__0._1.min",
+                        "    Max 1: conv_r__0._1.max",
+                        "    Min 2: conv_r__0._2.min",
+                        "    Max 2: conv_r__0._2.max"
+                    ],
+                    "Load Jacobians": [
+                        " 1   1   0   0  ",
+                        " 0   0   1   0  ",
+                        " 0   0   0   1  "
+                    ]
+                },
+                "From": "mirror_interior",
+                "Name": "mirror_interior -> conv_r__0.update(0)",
+                "To": "conv_r__0.update(0)"
+            },
+            {
+                "Details": {
+                    "Footprint": [
+                        "    Min 0: min(select((2000 <= mirror_interior._0.min) || (mirror_interior._0.max < 0), 0, max(min(mirror_interior._0.min, 1999), 0)), select((2000 <= mirror_interior._0.max) || (mirror_interior._0.min < 0), 0, max(min(mirror_interior._0.min, 1999), 0)))",
+                        "    Max 0: max(select((2000 <= mirror_interior._0.min) || (mirror_interior._0.max < 0), 1999, max(min(mirror_interior._0.max, 1999), 0)), select((2000 <= mirror_interior._0.max) || (mirror_interior._0.min < 0), 1999, max(min(mirror_interior._0.max, 1999), 0)))",
+                        "    Min 1: min(select((2000 <= mirror_interior._1.min) || (mirror_interior._1.max < 0), 0, max(min(mirror_interior._1.min, 1999), 0)), select((2000 <= mirror_interior._1.max) || (mirror_interior._1.min < 0), 0, max(min(mirror_interior._1.min, 1999), 0)))",
+                        "    Max 1: max(select((2000 <= mirror_interior._1.min) || (mirror_interior._1.max < 0), 1999, max(min(mirror_interior._1.max, 1999), 0)), select((2000 <= mirror_interior._1.max) || (mirror_interior._1.min < 0), 1999, max(min(mirror_interior._1.max, 1999), 0)))",
+                        "    Min 2: min(select((3 <= mirror_interior._2.min) || (mirror_interior._2.max < 0), 0, max(min(mirror_interior._2.min, 2), 0)), select((3 <= mirror_interior._2.max) || (mirror_interior._2.min < 0), 0, max(min(mirror_interior._2.min, 2), 0)))",
+                        "    Max 2: max(select((3 <= mirror_interior._2.min) || (mirror_interior._2.max < 0), 2, max(min(mirror_interior._2.max, 2), 0)), select((3 <= mirror_interior._2.max) || (mirror_interior._2.min < 0), 2, max(min(mirror_interior._2.max, 2), 0)))"
+                    ],
+                    "Load Jacobians": [
+                        " _   0   0  ",
+                        " 0   _   0  "
+                    ]
+                },
+                "From": "lambda_0",
+                "Name": "lambda_0 -> mirror_interior",
+                "To": "mirror_interior"
+            },
+            {
+                "Details": {
+                    "Footprint": [
+                        "    Min 0: lambda_0._0.min",
+                        "    Max 0: lambda_0._0.max",
+                        "    Min 1: lambda_0._1.min",
+                        "    Max 1: lambda_0._1.max",
+                        "    Min 2: lambda_0._2.min",
+                        "    Max 2: lambda_0._2.max"
+                    ],
+                    "Load Jacobians": [
+                        " 1   0   0  ",
+                        " 0   1   0  ",
+                        " 0   0   1  "
+                    ]
+                },
+                "From": "input_im",
+                "Name": "input_im -> lambda_0",
+                "To": "lambda_0"
+            }
+        ],
+        "Nodes": [
+            {
+                "Details": {
+                    "Memory access patterns": [
+                        "      Pointwise:      1 0 0 1",
+                        "      Transpose:      1 0 0 1",
+                        "      Broadcast:      1 0 0 1",
+                        "      Slice:          1 0 0 1"
+                    ],
+                    "Op histogram": [
+                        "      Constant:   0",
+                        "      Cast:       0",
+                        "      Variable:   6",
+                        "      Param:      0",
+                        "      Add:        0",
+                        "      Sub:        0",
+                        "      Mod:        0",
+                        "      Mul:        0",
+                        "      Div:        0",
+                        "      Min:        0",
+                        "      Max:        0",
+                        "      EQ:         0",
+                        "      NE:         0",
+                        "      LT:         0",
+                        "      LE:         0",
+                        "      And:        0",
+                        "      Or:         0",
+                        "      Not:        0",
+                        "      Select:     0",
+                        "      ImageCall:  0",
+                        "      FuncCall:   1",
+                        "      SelfCall:   0",
+                        "      ExternCall: 0",
+                        "      Let:        0"
+                    ],
+                    "Region computed": [
+                        "    casted._0.min, casted._0.max",
+                        "    casted._1.min, casted._1.max",
+                        "    casted._2.min, casted._2.max"
+                    ],
+                    "Stage 0": [
+                        "    _0 casted._0.min casted._0.max",
+                        "    _1 casted._1.min casted._1.max",
+                        "    _2 casted._2.min casted._2.max"
+                    ],
+                    "Symbolic region required": [
+                        "    casted._0.min, casted._0.max",
+                        "    casted._1.min, casted._1.max",
+                        "    casted._2.min, casted._2.max"
+                    ]
+                },
+                "Name": "casted"
+            },
+            {
+                "Details": {
+                    "Memory access patterns": [
+                        "      Pointwise:      1 0 0 0",
+                        "      Transpose:      1 0 0 0",
+                        "      Broadcast:      1 0 0 0",
+                        "      Slice:          1 0 0 0",
+                        "      Pointwise:      1 0 0 1",
+                        "      Transpose:      1 0 0 1",
+                        "      Broadcast:      1 0 0 1",
+                        "      Slice:          1 0 0 1"
+                    ],
+                    "Op histogram": [
+                        "      Constant:   0",
+                        "      Cast:       0",
+                        "      Variable:   11",
+                        "      Param:      0",
+                        "      Add:        0",
+                        "      Sub:        0",
+                        "      Mod:        0",
+                        "      Mul:        0",
+                        "      Div:        1",
+                        "      Min:        0",
+                        "      Max:        1",
+                        "      EQ:         0",
+                        "      NE:         0",
+                        "      LT:         0",
+                        "      LE:         0",
+                        "      And:        0",
+                        "      Or:         0",
+                        "      Not:        0",
+                        "      Select:     0",
+                        "      ImageCall:  0",
+                        "      FuncCall:   1",
+                        "      SelfCall:   0",
+                        "      ExternCall: 0",
+                        "      Let:        1"
+                    ],
+                    "Region computed": [
+                        "    binary_op$2._0.min, binary_op$2._0.max",
+                        "    binary_op$2._1.min, binary_op$2._1.max",
+                        "    binary_op$2._2.min, binary_op$2._2.max"
+                    ],
+                    "Stage 0": [
+                        "    _0 binary_op$2._0.min binary_op$2._0.max",
+                        "    _1 binary_op$2._1.min binary_op$2._1.max",
+                        "    _2 binary_op$2._2.min binary_op$2._2.max"
+                    ],
+                    "Symbolic region required": [
+                        "    binary_op$2._0.min, binary_op$2._0.max",
+                        "    binary_op$2._1.min, binary_op$2._1.max",
+                        "    binary_op$2._2.min, binary_op$2._2.max"
+                    ]
+                },
+                "Name": "binary_op$2"
+            },
+            {
+                "Details": {
+                    "Memory access patterns": [
+                        "      Pointwise:      0 0 0 1",
+                        "      Transpose:      0 0 0 1",
+                        "      Broadcast:      0 0 0 1",
+                        "      Slice:          0 0 0 1",
+                        "      Pointwise:      0 0 0 0",
+                        "      Transpose:      0 0 0 0",
+                        "      Broadcast:      0 0 0 0",
+                        "      Slice:          0 0 0 0",
+                        "      Pointwise:      0 0 0 0",
+                        "      Transpose:      0 0 0 0",
+                        "      Broadcast:      0 0 0 0",
+                        "      Slice:          0 0 0 0",
+                        "      Pointwise:      0 0 0 0",
+                        "      Transpose:      0 0 0 0",
+                        "      Broadcast:      0 0 0 0",
+                        "      Slice:          0 0 0 0"
+                    ],
+                    "Op histogram": [
+                        "      Constant:   0",
+                        "      Cast:       0",
+                        "      Variable:   10",
+                        "      Param:      0",
+                        "      Add:        1",
+                        "      Sub:        0",
+                        "      Mod:        0",
+                        "      Mul:        0",
+                        "      Div:        0",
+                        "      Min:        0",
+                        "      Max:        0",
+                        "      EQ:         0",
+                        "      NE:         0",
+                        "      LT:         0",
+                        "      LE:         0",
+                        "      And:        0",
+                        "      Or:         0",
+                        "      Not:        0",
+                        "      Select:     0",
+                        "      ImageCall:  0",
+                        "      FuncCall:   0",
+                        "      SelfCall:   0",
+                        "      ExternCall: 0",
+                        "      Let:        0"
+                    ],
+                    "Region computed": [
+                        "    conv_r__1._0.min, conv_r__1._0.max",
+                        "    conv_r__1._1.min, conv_r__1._1.max",
+                        "    conv_r__1._2.min, conv_r__1._2.max"
+                    ],
+                    "Stage 0": [
+                        "    _0 conv_r__1._0.min conv_r__1._0.max",
+                        "    _1 conv_r__1._1.min conv_r__1._1.max",
+                        "    _2 conv_r__1._2.min conv_r__1._2.max"
+                    ],
+                    "Symbolic region required": [
+                        "    conv_r__1._0.min, conv_r__1._0.max",
+                        "    conv_r__1._1.min, conv_r__1._1.max",
+                        "    conv_r__1._2.min, conv_r__1._2.max"
+                    ]
+                },
+                "Name": "conv_r__1"
+            },
+            {
+                "Details": {
+                    "Memory access patterns": [
+                        "      Pointwise:      0 0 0 1",
+                        "      Transpose:      0 0 0 1",
+                        "      Broadcast:      0 0 0 1",
+                        "      Slice:          0 0 0 1",
+                        "      Pointwise:      0 0 0 0",
+                        "      Transpose:      0 0 0 0",
+                        "      Broadcast:      0 0 0 0",
+                        "      Slice:          0 0 0 0"
+                    ],
+                    "Op histogram": [
+                        "      Constant:   1",
+                        "      Cast:       0",
+                        "      Variable:   11",
+                        "      Param:      0",
+                        "      Add:        3",
+                        "      Sub:        0",
+                        "      Mod:        0",
+                        "      Mul:        1",
+                        "      Div:        0",
+                        "      Min:        0",
+                        "      Max:        0",
+                        "      EQ:         0",
+                        "      NE:         0",
+                        "      LT:         0",
+                        "      LE:         0",
+                        "      And:        0",
+                        "      Or:         0",
+                        "      Not:        0",
+                        "      Select:     0",
+                        "      ImageCall:  0",
+                        "      FuncCall:   1",
+                        "      SelfCall:   1",
+                        "      ExternCall: 0",
+                        "      Let:        0"
+                    ],
+                    "Region computed": [
+                        "    all_r$2._0.min, all_r$2._0.max",
+                        "    all_r$2._1.min, all_r$2._1.max",
+                        "    all_r$2._2.min, all_r$2._2.max"
+                    ],
+                    "Stage 0": [
+                        "    _0 all_r$2._0.min all_r$2._0.max",
+                        "    _1 all_r$2._1.min all_r$2._1.max",
+                        "    _2 all_r$2._2.min all_r$2._2.max"
+                    ],
+                    "Symbolic region required": [
+                        "    all_r$2._0.min, all_r$2._0.max",
+                        "    all_r$2._1.min, all_r$2._1.max",
+                        "    all_r$2._2.min, all_r$2._2.max"
+                    ]
+                },
+                "Name": "all_r$2"
+            },
+            {
+                "Details": {
+                    "Memory access patterns": [
+                        "      Pointwise:      1 0 0 1",
+                        "      Transpose:      1 0 0 1",
+                        "      Broadcast:      1 0 0 1",
+                        "      Slice:          1 0 0 1"
+                    ],
+                    "Op histogram": [
+                        "      Constant:   2",
+                        "      Cast:       0",
+                        "      Variable:   8",
+                        "      Param:      0",
+                        "      Add:        0",
+                        "      Sub:        0",
+                        "      Mod:        0",
+                        "      Mul:        0",
+                        "      Div:        0",
+                        "      Min:        1",
+                        "      Max:        1",
+                        "      EQ:         0",
+                        "      NE:         0",
+                        "      LT:         0",
+                        "      LE:         0",
+                        "      And:        0",
+                        "      Or:         0",
+                        "      Not:        0",
+                        "      Select:     0",
+                        "      ImageCall:  0",
+                        "      FuncCall:   2",
+                        "      SelfCall:   0",
+                        "      ExternCall: 0",
+                        "      Let:        0"
+                    ],
+                    "Region computed": [
+                        "    sliced._0.min, sliced._0.max",
+                        "    sliced._1.min, sliced._1.max",
+                        "    sliced._2.min, sliced._2.max"
+                    ],
+                    "Stage 0": [
+                        "    _0 sliced._0.min sliced._0.max",
+                        "    _1 sliced._1.min sliced._1.max",
+                        "    _2 sliced._2.min sliced._2.max"
+                    ],
+                    "Symbolic region required": [
+                        "    sliced._0.min, sliced._0.max",
+                        "    sliced._1.min, sliced._1.max",
+                        "    sliced._2.min, sliced._2.max"
+                    ]
+                },
+                "Name": "sliced"
+            },
+            {
+                "Details": {
+                    "Memory access patterns": [
+                        "      Pointwise:      0 0 0 1",
+                        "      Transpose:      0 0 0 1",
+                        "      Broadcast:      0 0 0 1",
+                        "      Slice:          0 0 0 1",
+                        "      Pointwise:      0 0 0 0",
+                        "      Transpose:      0 0 0 0",
+                        "      Broadcast:      0 0 0 0",
+                        "      Slice:          0 0 0 0",
+                        "      Pointwise:      0 0 0 0",
+                        "      Transpose:      0 0 0 0",
+                        "      Broadcast:      0 0 0 0",
+                        "      Slice:          0 0 0 0"
+                    ],
+                    "Op histogram": [
+                        "      Constant:   2",
+                        "      Cast:       0",
+                        "      Variable:   11",
+                        "      Param:      0",
+                        "      Add:        3",
+                        "      Sub:        0",
+                        "      Mod:        0",
+                        "      Mul:        2",
+                        "      Div:        0",
+                        "      Min:        0",
+                        "      Max:        0",
+                        "      EQ:         0",
+                        "      NE:         0",
+                        "      LT:         0",
+                        "      LE:         0",
+                        "      And:        0",
+                        "      Or:         0",
+                        "      Not:        0",
+                        "      Select:     0",
+                        "      ImageCall:  0",
+                        "      FuncCall:   0",
+                        "      SelfCall:   1",
+                        "      ExternCall: 0",
+                        "      Let:        0"
+                    ],
+                    "Region computed": [
+                        "    all_r._0.min, all_r._0.max",
+                        "    all_r._1.min, all_r._1.max",
+                        "    all_r._2.min, all_r._2.max"
+                    ],
+                    "Stage 0": [
+                        "    _0 all_r._0.min all_r._0.max",
+                        "    _1 all_r._1.min all_r._1.max",
+                        "    _2 all_r._2.min all_r._2.max"
+                    ],
+                    "Symbolic region required": [
+                        "    all_r._0.min, all_r._0.max",
+                        "    all_r._1.min, all_r._1.max",
+                        "    all_r._2.min, all_r._2.max"
+                    ]
+                },
+                "Name": "all_r"
+            },
+            {
+                "Details": {
+                    "Memory access patterns": [
+                        "      Pointwise:      0 0 0 1",
+                        "      Transpose:      0 0 0 1",
+                        "      Broadcast:      0 0 0 1",
+                        "      Slice:          0 0 0 1",
+                        "      Pointwise:      0 0 0 0",
+                        "      Transpose:      0 0 0 0",
+                        "      Broadcast:      0 0 0 0",
+                        "      Slice:          0 0 0 0"
+                    ],
+                    "Op histogram": [
+                        "      Constant:   32",
+                        "      Cast:       0",
+                        "      Variable:   51",
+                        "      Param:      0",
+                        "      Add:        16",
+                        "      Sub:        0",
+                        "      Mod:        0",
+                        "      Mul:        16",
+                        "      Div:        0",
+                        "      Min:        0",
+                        "      Max:        0",
+                        "      EQ:         0",
+                        "      NE:         0",
+                        "      LT:         0",
+                        "      LE:         0",
+                        "      And:        0",
+                        "      Or:         0",
+                        "      Not:        0",
+                        "      Select:     0",
+                        "      ImageCall:  0",
+                        "      FuncCall:   0",
+                        "      SelfCall:   0",
+                        "      ExternCall: 0",
+                        "      Let:        0"
+                    ],
+                    "Region computed": [
+                        "    downsampled_box__1._0.min, downsampled_box__1._0.max",
+                        "    downsampled_box__1._1.min, downsampled_box__1._1.max",
+                        "    downsampled_box__1._2.min, downsampled_box__1._2.max"
+                    ],
+                    "Stage 0": [
+                        "    _0 downsampled_box__1._0.min downsampled_box__1._0.max",
+                        "    _1 downsampled_box__1._1.min downsampled_box__1._1.max",
+                        "    _2 downsampled_box__1._2.min downsampled_box__1._2.max"
+                    ],
+                    "Symbolic region required": [
+                        "    downsampled_box__1._0.min, downsampled_box__1._0.max",
+                        "    downsampled_box__1._1.min, downsampled_box__1._1.max",
+                        "    downsampled_box__1._2.min, downsampled_box__1._2.max"
+                    ]
+                },
+                "Name": "downsampled_box__1"
+            },
+            {
+                "Details": {
+                    "Memory access patterns": [
+                        "      Pointwise:      0 0 0 1",
+                        "      Transpose:      0 0 0 1",
+                        "      Broadcast:      0 0 0 1",
+                        "      Slice:          0 0 0 1",
+                        "      Pointwise:      0 0 0 0",
+                        "      Transpose:      0 0 0 0",
+                        "      Broadcast:      0 0 0 0",
+                        "      Slice:          0 0 0 0"
+                    ],
+                    "Op histogram": [
+                        "      Constant:   1",
+                        "      Cast:       0",
+                        "      Variable:   6",
+                        "      Param:      0",
+                        "      Add:        0",
+                        "      Sub:        0",
+                        "      Mod:        0",
+                        "      Mul:        0",
+                        "      Div:        1",
+                        "      Min:        0",
+                        "      Max:        0",
+                        "      EQ:         0",
+                        "      NE:         0",
+                        "      LT:         0",
+                        "      LE:         0",
+                        "      And:        0",
+                        "      Or:         0",
+                        "      Not:        0",
+                        "      Select:     0",
+                        "      ImageCall:  0",
+                        "      FuncCall:   0",
+                        "      SelfCall:   0",
+                        "      ExternCall: 0",
+                        "      Let:        0"
+                    ],
+                    "Region computed": [
+                        "    upsampled_nn__1._0.min, upsampled_nn__1._0.max",
+                        "    upsampled_nn__1._1.min, upsampled_nn__1._1.max",
+                        "    upsampled_nn__1._2.min, upsampled_nn__1._2.max"
+                    ],
+                    "Stage 0": [
+                        "    _0 upsampled_nn__1._0.min upsampled_nn__1._0.max",
+                        "    _1 upsampled_nn__1._1.min upsampled_nn__1._1.max",
+                        "    _2 upsampled_nn__1._2.min upsampled_nn__1._2.max"
+                    ],
+                    "Symbolic region required": [
+                        "    upsampled_nn__1._0.min, upsampled_nn__1._0.max",
+                        "    upsampled_nn__1._1.min, upsampled_nn__1._1.max",
+                        "    upsampled_nn__1._2.min, upsampled_nn__1._2.max"
+                    ]
+                },
+                "Name": "upsampled_nn__1"
+            },
+            {
+                "Details": {
+                    "Memory access patterns": [
+                        "      Pointwise:      1 0 0 1",
+                        "      Transpose:      1 0 0 1",
+                        "      Broadcast:      1 0 0 1",
+                        "      Slice:          1 0 0 1",
+                        "      Pointwise:      0 0 0 0",
+                        "      Transpose:      0 0 0 0",
+                        "      Broadcast:      0 0 0 0",
+                        "      Slice:          0 0 0 0"
+                    ],
+                    "Op histogram": [
+                        "      Constant:   0",
+                        "      Cast:       0",
+                        "      Variable:   6",
+                        "      Param:      0",
+                        "      Add:        0",
+                        "      Sub:        0",
+                        "      Mod:        0",
+                        "      Mul:        0",
+                        "      Div:        0",
+                        "      Min:        0",
+                        "      Max:        0",
+                        "      EQ:         0",
+                        "      NE:         0",
+                        "      LT:         0",
+                        "      LE:         0",
+                        "      And:        0",
+                        "      Or:         0",
+                        "      Not:        0",
+                        "      Select:     0",
+                        "      ImageCall:  0",
+                        "      FuncCall:   0",
+                        "      SelfCall:   0",
+                        "      ExternCall: 0",
+                        "      Let:        0"
+                    ],
+                    "Region computed": [
+                        "    relu$1._0.min, relu$1._0.max",
+                        "    relu$1._1.min, relu$1._1.max",
+                        "    relu$1._2.min, relu$1._2.max"
+                    ],
+                    "Stage 0": [
+                        "    _0 relu$1._0.min relu$1._0.max",
+                        "    _1 relu$1._1.min relu$1._1.max",
+                        "    _2 relu$1._2.min relu$1._2.max"
+                    ],
+                    "Symbolic region required": [
+                        "    relu$1._0.min, relu$1._0.max",
+                        "    relu$1._1.min, relu$1._1.max",
+                        "    relu$1._2.min, relu$1._2.max"
+                    ]
+                },
+                "Name": "relu$1"
+            },
+            {
+                "Details": {
+                    "Memory access patterns": [
+                        "      Pointwise:      0 0 0 1",
+                        "      Transpose:      0 0 0 1",
+                        "      Broadcast:      0 0 0 1",
+                        "      Slice:          0 0 0 1",
+                        "      Pointwise:      1 0 0 0",
+                        "      Transpose:      1 0 0 0",
+                        "      Broadcast:      1 0 0 0",
+                        "      Slice:          1 0 0 0"
+                    ],
+                    "Op histogram": [
+                        "      Constant:   0",
+                        "      Cast:       0",
+                        "      Variable:   6",
+                        "      Param:      0",
+                        "      Add:        0",
+                        "      Sub:        0",
+                        "      Mod:        0",
+                        "      Mul:        0",
+                        "      Div:        0",
+                        "      Min:        0",
+                        "      Max:        0",
+                        "      EQ:         0",
+                        "      NE:         0",
+                        "      LT:         0",
+                        "      LE:         0",
+                        "      And:        0",
+                        "      Or:         0",
+                        "      Not:        0",
+                        "      Select:     0",
+                        "      ImageCall:  0",
+                        "      FuncCall:   1",
+                        "      SelfCall:   0",
+                        "      ExternCall: 0",
+                        "      Let:        0"
+                    ],
+                    "Region computed": [
+                        "    relu._0.min, relu._0.max",
+                        "    relu._1.min, relu._1.max",
+                        "    relu._2.min, relu._2.max"
+                    ],
+                    "Stage 0": [
+                        "    _0 relu._0.min relu._0.max",
+                        "    _1 relu._1.min relu._1.max",
+                        "    _2 relu._2.min relu._2.max"
+                    ],
+                    "Symbolic region required": [
+                        "    relu._0.min, relu._0.max",
+                        "    relu._1.min, relu._1.max",
+                        "    relu._2.min, relu._2.max"
+                    ]
+                },
+                "Name": "relu"
+            },
+            {
+                "Details": {
+                    "Memory access patterns": [
+                        "      Pointwise:      0 0 0 1",
+                        "      Transpose:      0 0 0 1",
+                        "      Broadcast:      0 0 0 1",
+                        "      Slice:          0 0 0 1",
+                        "      Pointwise:      0 0 0 0",
+                        "      Transpose:      0 0 0 0",
+                        "      Broadcast:      0 0 0 0",
+                        "      Slice:          0 0 0 0"
+                    ],
+                    "Op histogram": [
+                        "      Constant:   1",
+                        "      Cast:       0",
+                        "      Variable:   10",
+                        "      Param:      0",
+                        "      Add:        2",
+                        "      Sub:        0",
+                        "      Mod:        0",
+                        "      Mul:        1",
+                        "      Div:        0",
+                        "      Min:        0",
+                        "      Max:        0",
+                        "      EQ:         0",
+                        "      NE:         0",
+                        "      LT:         0",
+                        "      LE:         0",
+                        "      And:        0",
+                        "      Or:         0",
+                        "      Not:        0",
+                        "      Select:     0",
+                        "      ImageCall:  0",
+                        "      FuncCall:   1",
+                        "      SelfCall:   1",
+                        "      ExternCall: 0",
+                        "      Let:        0"
+                    ],
+                    "Region computed": [
+                        "    conv_r__0._0.min, conv_r__0._0.max",
+                        "    conv_r__0._1.min, conv_r__0._1.max",
+                        "    conv_r__0._2.min, conv_r__0._2.max"
+                    ],
+                    "Stage 0": [
+                        "    _0 conv_r__0._0.min conv_r__0._0.max",
+                        "    _1 conv_r__0._1.min conv_r__0._1.max",
+                        "    _2 conv_r__0._2.min conv_r__0._2.max"
+                    ],
+                    "Symbolic region required": [
+                        "    conv_r__0._0.min, conv_r__0._0.max",
+                        "    conv_r__0._1.min, conv_r__0._1.max",
+                        "    conv_r__0._2.min, conv_r__0._2.max"
+                    ]
+                },
+                "Name": "conv_r__0"
+            },
+            {
+                "Details": {
+                    "Memory access patterns": [
+                        "      Pointwise:      0 0 0 0",
+                        "      Transpose:      0 0 0 0",
+                        "      Broadcast:      0 0 0 0",
+                        "      Slice:          0 0 0 0",
+                        "      Pointwise:      0 0 0 1",
+                        "      Transpose:      0 0 0 1",
+                        "      Broadcast:      0 0 0 1",
+                        "      Slice:          0 0 0 1"
+                    ],
+                    "Op histogram": [
+                        "      Constant:   15",
+                        "      Cast:       0",
+                        "      Variable:   21",
+                        "      Param:      27",
+                        "      Add:        18",
+                        "      Sub:        9",
+                        "      Mod:        3",
+                        "      Mul:        3",
+                        "      Div:        0",
+                        "      Min:        3",
+                        "      Max:        3",
+                        "      EQ:         0",
+                        "      NE:         0",
+                        "      LT:         0",
+                        "      LE:         0",
+                        "      And:        0",
+                        "      Or:         0",
+                        "      Not:        0",
+                        "      Select:     3",
+                        "      ImageCall:  0",
+                        "      FuncCall:   1",
+                        "      SelfCall:   0",
+                        "      ExternCall: 6",
+                        "      Let:        3"
+                    ],
+                    "Region computed": [
+                        "    mirror_interior._0.min, mirror_interior._0.max",
+                        "    mirror_interior._1.min, mirror_interior._1.max",
+                        "    mirror_interior._2.min, mirror_interior._2.max"
+                    ],
+                    "Stage 0": [
+                        "    _0 mirror_interior._0.min mirror_interior._0.max",
+                        "    _1 mirror_interior._1.min mirror_interior._1.max",
+                        "    _2 mirror_interior._2.min mirror_interior._2.max"
+                    ],
+                    "Symbolic region required": [
+                        "    mirror_interior._0.min, mirror_interior._0.max",
+                        "    mirror_interior._1.min, mirror_interior._1.max",
+                        "    mirror_interior._2.min, mirror_interior._2.max"
+                    ]
+                },
+                "Name": "mirror_interior"
+            },
+            {
+                "Details": {
+                    "Memory access patterns": [
+                        "      Pointwise:      1 0 0 1",
+                        "      Transpose:      1 0 0 1",
+                        "      Broadcast:      1 0 0 1",
+                        "      Slice:          1 0 0 1"
+                    ],
+                    "Op histogram": [
+                        "      Constant:   0",
+                        "      Cast:       0",
+                        "      Variable:   6",
+                        "      Param:      0",
+                        "      Add:        0",
+                        "      Sub:        0",
+                        "      Mod:        0",
+                        "      Mul:        0",
+                        "      Div:        0",
+                        "      Min:        0",
+                        "      Max:        0",
+                        "      EQ:         0",
+                        "      NE:         0",
+                        "      LT:         0",
+                        "      LE:         0",
+                        "      And:        0",
+                        "      Or:         0",
+                        "      Not:        0",
+                        "      Select:     0",
+                        "      ImageCall:  0",
+                        "      FuncCall:   1",
+                        "      SelfCall:   0",
+                        "      ExternCall: 0",
+                        "      Let:        0"
+                    ],
+                    "Region computed": [
+                        "    lambda_0._0.min, lambda_0._0.max",
+                        "    lambda_0._1.min, lambda_0._1.max",
+                        "    lambda_0._2.min, lambda_0._2.max"
+                    ],
+                    "Stage 0": [
+                        "    _0 lambda_0._0.min lambda_0._0.max",
+                        "    _1 lambda_0._1.min lambda_0._1.max",
+                        "    _2 lambda_0._2.min lambda_0._2.max"
+                    ],
+                    "Symbolic region required": [
+                        "    lambda_0._0.min, lambda_0._0.max",
+                        "    lambda_0._1.min, lambda_0._1.max",
+                        "    lambda_0._2.min, lambda_0._2.max"
+                    ]
+                },
+                "Name": "lambda_0"
+            }
+        ]
+    },
+    "scheduling_data": [
+        {
+            "Details": {
+                "scheduling_feature": {
+                    "allocation_bytes_read_per_realization": 1500064.0,
+                    "bytes_at_production": 48000000.0,
+                    "bytes_at_realization": 48000000.0,
+                    "bytes_at_root": 48000000.0,
+                    "bytes_at_task": 6000000.0,
+                    "inlined_calls": 0.0,
+                    "inner_parallelism": 8.0,
+                    "innermost_bytes_at_production": 8000.0,
+                    "innermost_bytes_at_realization": 8000.0,
+                    "innermost_bytes_at_root": 8000.0,
+                    "innermost_bytes_at_task": 8000.0,
+                    "innermost_loop_extent": 567.0,
+                    "innermost_pure_loop_extent": 567.0,
+                    "native_vector_size": 16.0,
+                    "num_productions": 1.0,
+                    "num_realizations": 1.0,
+                    "num_scalars": 0.0,
+                    "num_vectors": 750000.0,
+                    "outer_parallelism": 1.0,
+                    "points_computed_minimum": 12000000.0,
+                    "points_computed_per_production": 12192768.0,
+                    "points_computed_per_realization": 12000000.0,
+                    "points_computed_total": 12000000.0,
+                    "scalar_loads_per_scalar": 1.0,
+                    "scalar_loads_per_vector": 0.0,
+                    "unique_bytes_read_per_realization": 1500064.0,
+                    "unique_bytes_read_per_task": 8067672.0,
+                    "unique_bytes_read_per_vector": 80.0,
+                    "unique_lines_read_per_realization": 751.0,
+                    "unique_lines_read_per_task": 1602.0,
+                    "unique_lines_read_per_vector": 2.0,
+                    "unrolled_loop_extent": 1.0,
+                    "vector_loads_per_vector": 1.0,
+                    "vector_size": 16.0,
+                    "working_set": 1525088.0,
+                    "working_set_at_production": 110471580.0,
+                    "working_set_at_realization": 110471580.0,
+                    "working_set_at_root": 110471580.0,
+                    "working_set_at_task": 1525088.0
+                }
+            },
+            "Name": "casted"
+        },
+        {
+            "Details": {
+                "scheduling_feature": {
+                    "allocation_bytes_read_per_realization": 0.0,
+                    "bytes_at_production": 0.0,
+                    "bytes_at_realization": 0.0,
+                    "bytes_at_root": 48000000.0,
+                    "bytes_at_task": 0.0,
+                    "inlined_calls": 12192768.0,
+                    "inner_parallelism": 1.0,
+                    "innermost_bytes_at_production": 0.0,
+                    "innermost_bytes_at_realization": 0.0,
+                    "innermost_bytes_at_root": 8000.0,
+                    "innermost_bytes_at_task": 0.0,
+                    "innermost_loop_extent": 0.0,
+                    "innermost_pure_loop_extent": 567.0,
+                    "native_vector_size": 16.0,
+                    "num_productions": 0.0,
+                    "num_realizations": 0.0,
+                    "num_scalars": 0.0,
+                    "num_vectors": 750000.0,
+                    "outer_parallelism": 8.0,
+                    "points_computed_minimum": 12000000.0,
+                    "points_computed_per_production": 0.0,
+                    "points_computed_per_realization": 0.0,
+                    "points_computed_total": 0.0,
+                    "scalar_loads_per_scalar": 0.0,
+                    "scalar_loads_per_vector": 0.0,
+                    "unique_bytes_read_per_realization": 0.0,
+                    "unique_bytes_read_per_task": 0.0,
+                    "unique_bytes_read_per_vector": 0.0,
+                    "unique_lines_read_per_realization": 0.0,
+                    "unique_lines_read_per_task": 0.0,
+                    "unique_lines_read_per_vector": 0.0,
+                    "unrolled_loop_extent": 0.0,
+                    "vector_loads_per_vector": 0.0,
+                    "vector_size": 16.0,
+                    "working_set": 0.0,
+                    "working_set_at_production": 0.0,
+                    "working_set_at_realization": 0.0,
+                    "working_set_at_root": 110471580.0,
+                    "working_set_at_task": 0.0
+                }
+            },
+            "Name": "binary_op$2"
+        },
+        {
+            "Details": {
+                "scheduling_feature": {
+                    "allocation_bytes_read_per_realization": 0.0,
+                    "bytes_at_production": 1500000.0,
+                    "bytes_at_realization": 1500000.0,
+                    "bytes_at_root": 12000000.0,
+                    "bytes_at_task": 1500000.0,
+                    "inlined_calls": 0.0,
+                    "inner_parallelism": 1.0,
+                    "innermost_bytes_at_production": 2000.0,
+                    "innermost_bytes_at_realization": 2000.0,
+                    "innermost_bytes_at_root": 2000.0,
+                    "innermost_bytes_at_task": 2000.0,
+                    "innermost_loop_extent": 24000.0,
+                    "innermost_pure_loop_extent": 24000.0,
+                    "native_vector_size": 64.0,
+                    "num_productions": 8.0,
+                    "num_realizations": 8.0,
+                    "num_scalars": 96000.0,
+                    "num_vectors": 186000.0,
+                    "outer_parallelism": 8.0,
+                    "points_computed_minimum": 12000000.0,
+                    "points_computed_per_production": 1536000.0,
+                    "points_computed_per_realization": 1500000.0,
+                    "points_computed_total": 12000000.0,
+                    "scalar_loads_per_scalar": 0.0,
+                    "scalar_loads_per_vector": 0.0,
+                    "unique_bytes_read_per_realization": 0.0,
+                    "unique_bytes_read_per_task": 0.0,
+                    "unique_bytes_read_per_vector": 0.0,
+                    "unique_lines_read_per_realization": 0.0,
+                    "unique_lines_read_per_task": 0.0,
+                    "unique_lines_read_per_vector": 0.0,
+                    "unrolled_loop_extent": 1.0,
+                    "vector_loads_per_vector": 0.0,
+                    "vector_size": 64.0,
+                    "working_set": 0.0,
+                    "working_set_at_production": 1525088.0,
+                    "working_set_at_realization": 1525088.0,
+                    "working_set_at_root": 110471580.0,
+                    "working_set_at_task": 1525088.0
+                }
+            },
+            "Name": "conv_r__1"
+        },
+        {
+            "Details": {
+                "scheduling_feature": {
+                    "allocation_bytes_read_per_realization": 13602000.0,
+                    "bytes_at_production": 1500000.0,
+                    "bytes_at_realization": 1500000.0,
+                    "bytes_at_root": 12000000.0,
+                    "bytes_at_task": 1500000.0,
+                    "inlined_calls": 0.0,
+                    "inner_parallelism": 1.0,
+                    "innermost_bytes_at_production": 2000.0,
+                    "innermost_bytes_at_realization": 2000.0,
+                    "innermost_bytes_at_root": 2000.0,
+                    "innermost_bytes_at_task": 2000.0,
+                    "innermost_loop_extent": 432000.0,
+                    "innermost_pure_loop_extent": 24000.0,
+                    "native_vector_size": 64.0,
+                    "num_productions": 8.0,
+                    "num_realizations": 8.0,
+                    "num_scalars": 1728000.0,
+                    "num_vectors": 3348000.0,
+                    "outer_parallelism": 8.0,
+                    "points_computed_minimum": 216000000.0,
+                    "points_computed_per_production": 27648000.0,
+                    "points_computed_per_realization": 27000000.0,
+                    "points_computed_total": 216000000.0,
+                    "scalar_loads_per_scalar": 2.0,
+                    "scalar_loads_per_vector": 0.0,
+                    "unique_bytes_read_per_realization": 3102000.0,
+                    "unique_bytes_read_per_task": 0.0,
+                    "unique_bytes_read_per_vector": 64.0,
+                    "unique_lines_read_per_realization": 1551.0,
+                    "unique_lines_read_per_task": 0.0,
+                    "unique_lines_read_per_vector": 1.0,
+                    "unrolled_loop_extent": 1.0,
+                    "vector_loads_per_vector": 2.0,
+                    "vector_size": 64.0,
+                    "working_set": 0.0,
+                    "working_set_at_production": 1525088.0,
+                    "working_set_at_realization": 1525088.0,
+                    "working_set_at_root": 110471580.0,
+                    "working_set_at_task": 1525088.0
+                }
+            },
+            "Name": "conv_r__1.update(0)"
+        },
+        {
+            "Details": {
+                "scheduling_feature": {
+                    "allocation_bytes_read_per_realization": 0.0,
+                    "bytes_at_production": 64.0,
+                    "bytes_at_realization": 64.0,
+                    "bytes_at_root": 48000000.0,
+                    "bytes_at_task": 64.0,
+                    "inlined_calls": 0.0,
+                    "inner_parallelism": 1.0,
+                    "innermost_bytes_at_production": 64.0,
+                    "innermost_bytes_at_realization": 64.0,
+                    "innermost_bytes_at_root": 8000.0,
+                    "innermost_bytes_at_task": 64.0,
+                    "innermost_loop_extent": 1.0,
+                    "innermost_pure_loop_extent": 1.0,
+                    "native_vector_size": 16.0,
+                    "num_productions": 762048.0,
+                    "num_realizations": 762048.0,
+                    "num_scalars": 0.0,
+                    "num_vectors": 762048.0,
+                    "outer_parallelism": 8.0,
+                    "points_computed_minimum": 12000000.0,
+                    "points_computed_per_production": 16.0,
+                    "points_computed_per_realization": 16.0,
+                    "points_computed_total": 12192768.0,
+                    "scalar_loads_per_scalar": 0.0,
+                    "scalar_loads_per_vector": 0.0,
+                    "unique_bytes_read_per_realization": 0.0,
+                    "unique_bytes_read_per_task": 0.0,
+                    "unique_bytes_read_per_vector": 0.0,
+                    "unique_lines_read_per_realization": 0.0,
+                    "unique_lines_read_per_task": 0.0,
+                    "unique_lines_read_per_vector": 0.0,
+                    "unrolled_loop_extent": 1.0,
+                    "vector_loads_per_vector": 0.0,
+                    "vector_size": 16.0,
+                    "working_set": 0.0,
+                    "working_set_at_production": 64.0,
+                    "working_set_at_realization": 64.0,
+                    "working_set_at_root": 110471580.0,
+                    "working_set_at_task": 1525088.0
+                }
+            },
+            "Name": "all_r$2"
+        },
+        {
+            "Details": {
+                "scheduling_feature": {
+                    "allocation_bytes_read_per_realization": 12064.0,
+                    "bytes_at_production": 64.0,
+                    "bytes_at_realization": 64.0,
+                    "bytes_at_root": 48000000.0,
+                    "bytes_at_task": 64.0,
+                    "inlined_calls": 0.0,
+                    "inner_parallelism": 1.0,
+                    "innermost_bytes_at_production": 64.0,
+                    "innermost_bytes_at_realization": 64.0,
+                    "innermost_bytes_at_root": 8000.0,
+                    "innermost_bytes_at_task": 64.0,
+                    "innermost_loop_extent": 1.0,
+                    "innermost_pure_loop_extent": 1.0,
+                    "native_vector_size": 16.0,
+                    "num_productions": 762048.0,
+                    "num_realizations": 762048.0,
+                    "num_scalars": 0.0,
+                    "num_vectors": 762048.0,
+                    "outer_parallelism": 8.0,
+                    "points_computed_minimum": 12000000.0,
+                    "points_computed_per_production": 16.0,
+                    "points_computed_per_realization": 16.0,
+                    "points_computed_total": 12192768.0,
+                    "scalar_loads_per_scalar": 2.0,
+                    "scalar_loads_per_vector": 0.0,
+                    "unique_bytes_read_per_realization": 128.0,
+                    "unique_bytes_read_per_task": 0.0,
+                    "unique_bytes_read_per_vector": 64.0,
+                    "unique_lines_read_per_realization": 2.0,
+                    "unique_lines_read_per_task": 0.0,
+                    "unique_lines_read_per_vector": 1.0,
+                    "unrolled_loop_extent": 1.0,
+                    "vector_loads_per_vector": 2.0,
+                    "vector_size": 16.0,
+                    "working_set": 0.0,
+                    "working_set_at_production": 64.0,
+                    "working_set_at_realization": 64.0,
+                    "working_set_at_root": 110471580.0,
+                    "working_set_at_task": 1525088.0
+                }
+            },
+            "Name": "all_r$2.update(0)"
+        },
+        {
+            "Details": {
+                "scheduling_feature": {
+                    "allocation_bytes_read_per_realization": 48855672.0,
+                    "bytes_at_production": 12000.0,
+                    "bytes_at_realization": 12000.0,
+                    "bytes_at_root": 16000000.0,
+                    "bytes_at_task": 12000.0,
+                    "inlined_calls": 0.0,
+                    "inner_parallelism": 1.0,
+                    "innermost_bytes_at_production": 4000.0,
+                    "innermost_bytes_at_realization": 4000.0,
+                    "innermost_bytes_at_root": 8000.0,
+                    "innermost_bytes_at_task": 4000.0,
+                    "innermost_loop_extent": 189.0,
+                    "innermost_pure_loop_extent": 189.0,
+                    "native_vector_size": 16.0,
+                    "num_productions": 1344.0,
+                    "num_realizations": 1344.0,
+                    "num_scalars": 32256.0,
+                    "num_vectors": 249984.0,
+                    "outer_parallelism": 8.0,
+                    "points_computed_minimum": 4000000.0,
+                    "points_computed_per_production": 3024.0,
+                    "points_computed_per_realization": 3000.0,
+                    "points_computed_total": 4032000.0,
+                    "scalar_loads_per_scalar": 2.0,
+                    "scalar_loads_per_vector": 16.0,
+                    "unique_bytes_read_per_realization": 256320.0,
+                    "unique_bytes_read_per_task": 0.0,
+                    "unique_bytes_read_per_vector": 880.0,
+                    "unique_lines_read_per_realization": 63.0,
+                    "unique_lines_read_per_task": 0.0,
+                    "unique_lines_read_per_vector": 7.0,
+                    "unrolled_loop_extent": 1.0,
+                    "vector_loads_per_vector": 1.0,
+                    "vector_size": 16.0,
+                    "working_set": 0.0,
+                    "working_set_at_production": 25088.0,
+                    "working_set_at_realization": 25088.0,
+                    "working_set_at_root": 110471580.0,
+                    "working_set_at_task": 1525088.0
+                }
+            },
+            "Name": "sliced"
+        },
+        {
+            "Details": {
+                "scheduling_feature": {
+                    "allocation_bytes_read_per_realization": 0.0,
+                    "bytes_at_production": 12000.0,
+                    "bytes_at_realization": 12000.0,
+                    "bytes_at_root": 16000000.0,
+                    "bytes_at_task": 12000.0,
+                    "inlined_calls": 0.0,
+                    "inner_parallelism": 1.0,
+                    "innermost_bytes_at_production": 4000.0,
+                    "innermost_bytes_at_realization": 4000.0,
+                    "innermost_bytes_at_root": 8000.0,
+                    "innermost_bytes_at_task": 4000.0,
+                    "innermost_loop_extent": 189.0,
+                    "innermost_pure_loop_extent": 189.0,
+                    "native_vector_size": 16.0,
+                    "num_productions": 1344.0,
+                    "num_realizations": 1344.0,
+                    "num_scalars": 32256.0,
+                    "num_vectors": 249984.0,
+                    "outer_parallelism": 8.0,
+                    "points_computed_minimum": 4000000.0,
+                    "points_computed_per_production": 3024.0,
+                    "points_computed_per_realization": 3000.0,
+                    "points_computed_total": 4032000.0,
+                    "scalar_loads_per_scalar": 0.0,
+                    "scalar_loads_per_vector": 0.0,
+                    "unique_bytes_read_per_realization": 0.0,
+                    "unique_bytes_read_per_task": 0.0,
+                    "unique_bytes_read_per_vector": 0.0,
+                    "unique_lines_read_per_realization": 0.0,
+                    "unique_lines_read_per_task": 0.0,
+                    "unique_lines_read_per_vector": 0.0,
+                    "unrolled_loop_extent": 1.0,
+                    "vector_loads_per_vector": 0.0,
+                    "vector_size": 16.0,
+                    "working_set": 0.0,
+                    "working_set_at_production": 25088.0,
+                    "working_set_at_realization": 25088.0,
+                    "working_set_at_root": 110471580.0,
+                    "working_set_at_task": 1525088.0
+                }
+            },
+            "Name": "all_r"
+        },
+        {
+            "Details": {
+                "scheduling_feature": {
+                    "allocation_bytes_read_per_realization": 13024.0,
+                    "bytes_at_production": 12000.0,
+                    "bytes_at_realization": 12000.0,
+                    "bytes_at_root": 16000000.0,
+                    "bytes_at_task": 12000.0,
+                    "inlined_calls": 0.0,
+                    "inner_parallelism": 1.0,
+                    "innermost_bytes_at_production": 4000.0,
+                    "innermost_bytes_at_realization": 4000.0,
+                    "innermost_bytes_at_root": 8000.0,
+                    "innermost_bytes_at_task": 4000.0,
+                    "innermost_loop_extent": 144.0,
+                    "innermost_pure_loop_extent": 48.0,
+                    "native_vector_size": 64.0,
+                    "num_productions": 1344.0,
+                    "num_realizations": 1344.0,
+                    "num_scalars": 483840.0,
+                    "num_vectors": 181440.0,
+                    "outer_parallelism": 8.0,
+                    "points_computed_minimum": 12000000.0,
+                    "points_computed_per_production": 9216.0,
+                    "points_computed_per_realization": 9000.0,
+                    "points_computed_total": 12096000.0,
+                    "scalar_loads_per_scalar": 17.0,
+                    "scalar_loads_per_vector": 0.0,
+                    "unique_bytes_read_per_realization": 13024.0,
+                    "unique_bytes_read_per_task": 0.0,
+                    "unique_bytes_read_per_vector": 1024.0,
+                    "unique_lines_read_per_realization": 19.0,
+                    "unique_lines_read_per_task": 0.0,
+                    "unique_lines_read_per_vector": 16.0,
+                    "unrolled_loop_extent": 1.0,
+                    "vector_loads_per_vector": 17.0,
+                    "vector_size": 64.0,
+                    "working_set": 1024.0,
+                    "working_set_at_production": 25088.0,
+                    "working_set_at_realization": 25088.0,
+                    "working_set_at_root": 110471580.0,
+                    "working_set_at_task": 1525088.0
+                }
+            },
+            "Name": "all_r.update(0)"
+        },
+        {
+            "Details": {
+                "scheduling_feature": {
+                    "allocation_bytes_read_per_realization": 0.0,
+                    "bytes_at_production": 0.0,
+                    "bytes_at_realization": 0.0,
+                    "bytes_at_root": 12000000.0,
+                    "bytes_at_task": 0.0,
+                    "inlined_calls": 12386304.0,
+                    "inner_parallelism": 1.0,
+                    "innermost_bytes_at_production": 0.0,
+                    "innermost_bytes_at_realization": 0.0,
+                    "innermost_bytes_at_root": 2000.0,
+                    "innermost_bytes_at_task": 0.0,
+                    "innermost_loop_extent": 0.0,
+                    "innermost_pure_loop_extent": 48.0,
+                    "native_vector_size": 64.0,
+                    "num_productions": 0.0,
+                    "num_realizations": 0.0,
+                    "num_scalars": 483840.0,
+                    "num_vectors": 181440.0,
+                    "outer_parallelism": 8.0,
+                    "points_computed_minimum": 12000000.0,
+                    "points_computed_per_production": 0.0,
+                    "points_computed_per_realization": 0.0,
+                    "points_computed_total": 0.0,
+                    "scalar_loads_per_scalar": 0.0,
+                    "scalar_loads_per_vector": 0.0,
+                    "unique_bytes_read_per_realization": 0.0,
+                    "unique_bytes_read_per_task": 0.0,
+                    "unique_bytes_read_per_vector": 0.0,
+                    "unique_lines_read_per_realization": 0.0,
+                    "unique_lines_read_per_task": 0.0,
+                    "unique_lines_read_per_vector": 0.0,
+                    "unrolled_loop_extent": 0.0,
+                    "vector_loads_per_vector": 0.0,
+                    "vector_size": 64.0,
+                    "working_set": 0.0,
+                    "working_set_at_production": 0.0,
+                    "working_set_at_realization": 0.0,
+                    "working_set_at_root": 110471580.0,
+                    "working_set_at_task": 0.0
+                }
+            },
+            "Name": "downsampled_box__1"
+        },
+        {
+            "Details": {
+                "scheduling_feature": {
+                    "allocation_bytes_read_per_realization": 12102000.0,
+                    "bytes_at_production": 1024.0,
+                    "bytes_at_realization": 1024.0,
+                    "bytes_at_root": 192000000.0,
+                    "bytes_at_task": 1024.0,
+                    "inlined_calls": 0.0,
+                    "inner_parallelism": 1.0,
+                    "innermost_bytes_at_production": 64.0,
+                    "innermost_bytes_at_realization": 64.0,
+                    "innermost_bytes_at_root": 2000.0,
+                    "innermost_bytes_at_task": 64.0,
+                    "innermost_loop_extent": 16.0,
+                    "innermost_pure_loop_extent": 16.0,
+                    "native_vector_size": 64.0,
+                    "num_productions": 193536.0,
+                    "num_realizations": 193536.0,
+                    "num_scalars": 0.0,
+                    "num_vectors": 3096576.0,
+                    "outer_parallelism": 8.0,
+                    "points_computed_minimum": 192000000.0,
+                    "points_computed_per_production": 1024.0,
+                    "points_computed_per_realization": 1024.0,
+                    "points_computed_total": 198180864.0,
+                    "scalar_loads_per_scalar": 1.0,
+                    "scalar_loads_per_vector": 0.0,
+                    "unique_bytes_read_per_realization": 128.0,
+                    "unique_bytes_read_per_task": 0.0,
+                    "unique_bytes_read_per_vector": 64.0,
+                    "unique_lines_read_per_realization": 2.0,
+                    "unique_lines_read_per_task": 0.0,
+                    "unique_lines_read_per_vector": 1.0,
+                    "unrolled_loop_extent": 1.0,
+                    "vector_loads_per_vector": 1.0,
+                    "vector_size": 64.0,
+                    "working_set": 0.0,
+                    "working_set_at_production": 1024.0,
+                    "working_set_at_realization": 1024.0,
+                    "working_set_at_root": 110471580.0,
+                    "working_set_at_task": 1525088.0
+                }
+            },
+            "Name": "upsampled_nn__1"
+        },
+        {
+            "Details": {
+                "scheduling_feature": {
+                    "allocation_bytes_read_per_realization": 500.0,
+                    "bytes_at_production": 12102000.0,
+                    "bytes_at_realization": 12102000.0,
+                    "bytes_at_root": 12102000.0,
+                    "bytes_at_task": 3024000.0,
+                    "inlined_calls": 0.0,
+                    "inner_parallelism": 4.0,
+                    "innermost_bytes_at_production": 2000.0,
+                    "innermost_bytes_at_realization": 2000.0,
+                    "innermost_bytes_at_root": 2000.0,
+                    "innermost_bytes_at_task": 2000.0,
+                    "innermost_loop_extent": 8.0,
+                    "innermost_pure_loop_extent": 8.0,
+                    "native_vector_size": 64.0,
+                    "num_productions": 1.0,
+                    "num_realizations": 1.0,
+                    "num_scalars": 96816.0,
+                    "num_vectors": 187581.0,
+                    "outer_parallelism": 1.0,
+                    "points_computed_minimum": 12102000.0,
+                    "points_computed_per_production": 12410880.0,
+                    "points_computed_per_realization": 12102000.0,
+                    "points_computed_total": 12102000.0,
+                    "scalar_loads_per_scalar": 1.0,
+                    "scalar_loads_per_vector": 0.0,
+                    "unique_bytes_read_per_realization": 500.0,
+                    "unique_bytes_read_per_task": 12229080.0,
+                    "unique_bytes_read_per_vector": 64.0,
+                    "unique_lines_read_per_realization": 1.0,
+                    "unique_lines_read_per_task": 1515.0,
+                    "unique_lines_read_per_vector": 1.0,
+                    "unrolled_loop_extent": 8.0,
+                    "vector_loads_per_vector": 1.0,
+                    "vector_size": 64.0,
+                    "working_set": 756.0,
+                    "working_set_at_production": 110471580.0,
+                    "working_set_at_realization": 110471580.0,
+                    "working_set_at_root": 110471580.0,
+                    "working_set_at_task": 756.0
+                }
+            },
+            "Name": "relu$1"
+        },
+        {
+            "Details": {
+                "scheduling_feature": {
+                    "allocation_bytes_read_per_realization": 256.0,
+                    "bytes_at_production": 500.0,
+                    "bytes_at_realization": 500.0,
+                    "bytes_at_root": 12102000.0,
+                    "bytes_at_task": 500.0,
+                    "inlined_calls": 0.0,
+                    "inner_parallelism": 1.0,
+                    "innermost_bytes_at_production": 500.0,
+                    "innermost_bytes_at_realization": 500.0,
+                    "innermost_bytes_at_root": 2000.0,
+                    "innermost_bytes_at_task": 500.0,
+                    "innermost_loop_extent": 8.0,
+                    "innermost_pure_loop_extent": 8.0,
+                    "native_vector_size": 64.0,
+                    "num_productions": 24240.0,
+                    "num_realizations": 24240.0,
+                    "num_scalars": 1260480.0,
+                    "num_vectors": 169680.0,
+                    "outer_parallelism": 4.0,
+                    "points_computed_minimum": 12102000.0,
+                    "points_computed_per_production": 512.0,
+                    "points_computed_per_realization": 500.0,
+                    "points_computed_total": 12120000.0,
+                    "scalar_loads_per_scalar": 1.0,
+                    "scalar_loads_per_vector": 0.0,
+                    "unique_bytes_read_per_realization": 256.0,
+                    "unique_bytes_read_per_task": 0.0,
+                    "unique_bytes_read_per_vector": 256.0,
+                    "unique_lines_read_per_realization": 1.0,
+                    "unique_lines_read_per_task": 0.0,
+                    "unique_lines_read_per_vector": 1.0,
+                    "unrolled_loop_extent": 8.0,
+                    "vector_loads_per_vector": 1.0,
+                    "vector_size": 64.0,
+                    "working_set": 256.0,
+                    "working_set_at_production": 756.0,
+                    "working_set_at_realization": 756.0,
+                    "working_set_at_root": 110471580.0,
+                    "working_set_at_task": 756.0
+                }
+            },
+            "Name": "relu"
+        },
+        {
+            "Details": {
+                "scheduling_feature": {
+                    "allocation_bytes_read_per_realization": 0.0,
+                    "bytes_at_production": 256.0,
+                    "bytes_at_realization": 256.0,
+                    "bytes_at_root": 48408000.0,
+                    "bytes_at_task": 256.0,
+                    "inlined_calls": 0.0,
+                    "inner_parallelism": 1.0,
+                    "innermost_bytes_at_production": 256.0,
+                    "innermost_bytes_at_realization": 256.0,
+                    "innermost_bytes_at_root": 8000.0,
+                    "innermost_bytes_at_task": 256.0,
+                    "innermost_loop_extent": 4.0,
+                    "innermost_pure_loop_extent": 4.0,
+                    "native_vector_size": 16.0,
+                    "num_productions": 193920.0,
+                    "num_realizations": 193920.0,
+                    "num_scalars": 0.0,
+                    "num_vectors": 775680.0,
+                    "outer_parallelism": 4.0,
+                    "points_computed_minimum": 12102000.0,
+                    "points_computed_per_production": 64.0,
+                    "points_computed_per_realization": 64.0,
+                    "points_computed_total": 12410880.0,
+                    "scalar_loads_per_scalar": 0.0,
+                    "scalar_loads_per_vector": 0.0,
+                    "unique_bytes_read_per_realization": 0.0,
+                    "unique_bytes_read_per_task": 0.0,
+                    "unique_bytes_read_per_vector": 0.0,
+                    "unique_lines_read_per_realization": 0.0,
+                    "unique_lines_read_per_task": 0.0,
+                    "unique_lines_read_per_vector": 0.0,
+                    "unrolled_loop_extent": 4.0,
+                    "vector_loads_per_vector": 0.0,
+                    "vector_size": 16.0,
+                    "working_set": 0.0,
+                    "working_set_at_production": 256.0,
+                    "working_set_at_realization": 256.0,
+                    "working_set_at_root": 110471580.0,
+                    "working_set_at_task": 756.0
+                }
+            },
+            "Name": "conv_r__0"
+        },
+        {
+            "Details": {
+                "scheduling_feature": {
+                    "allocation_bytes_read_per_realization": 48843928.0,
+                    "bytes_at_production": 256.0,
+                    "bytes_at_realization": 256.0,
+                    "bytes_at_root": 48408000.0,
+                    "bytes_at_task": 256.0,
+                    "inlined_calls": 0.0,
+                    "inner_parallelism": 1.0,
+                    "innermost_bytes_at_production": 256.0,
+                    "innermost_bytes_at_realization": 256.0,
+                    "innermost_bytes_at_root": 8000.0,
+                    "innermost_bytes_at_task": 256.0,
+                    "innermost_loop_extent": 76.0,
+                    "innermost_pure_loop_extent": 4.0,
+                    "native_vector_size": 16.0,
+                    "num_productions": 193920.0,
+                    "num_realizations": 193920.0,
+                    "num_scalars": 0.0,
+                    "num_vectors": 14737920.0,
+                    "outer_parallelism": 4.0,
+                    "points_computed_minimum": 229938000.0,
+                    "points_computed_per_production": 1216.0,
+                    "points_computed_per_realization": 1216.0,
+                    "points_computed_total": 235806720.0,
+                    "scalar_loads_per_scalar": 2.0,
+                    "scalar_loads_per_vector": 0.0,
+                    "unique_bytes_read_per_realization": 584.0,
+                    "unique_bytes_read_per_task": 0.0,
+                    "unique_bytes_read_per_vector": 64.0,
+                    "unique_lines_read_per_realization": 2.0,
+                    "unique_lines_read_per_task": 0.0,
+                    "unique_lines_read_per_vector": 1.0,
+                    "unrolled_loop_extent": 4.0,
+                    "vector_loads_per_vector": 2.0,
+                    "vector_size": 16.0,
+                    "working_set": 0.0,
+                    "working_set_at_production": 256.0,
+                    "working_set_at_realization": 256.0,
+                    "working_set_at_root": 110471580.0,
+                    "working_set_at_task": 756.0
+                }
+            },
+            "Name": "conv_r__0.update(0)"
+        },
+        {
+            "Details": {
+                "scheduling_feature": {
+                    "allocation_bytes_read_per_realization": 64.0,
+                    "bytes_at_production": 48843672.0,
+                    "bytes_at_realization": 48843672.0,
+                    "bytes_at_root": 48843672.0,
+                    "bytes_at_task": 12204864.0,
+                    "inlined_calls": 0.0,
+                    "inner_parallelism": 4.0,
+                    "innermost_bytes_at_production": 8072.0,
+                    "innermost_bytes_at_realization": 8072.0,
+                    "innermost_bytes_at_root": 8072.0,
+                    "innermost_bytes_at_task": 8072.0,
+                    "innermost_loop_extent": 192405.0,
+                    "innermost_pure_loop_extent": 192405.0,
+                    "native_vector_size": 16.0,
+                    "num_productions": 1.0,
+                    "num_realizations": 1.0,
+                    "num_scalars": 12102.0,
+                    "num_vectors": 762426.0,
+                    "outer_parallelism": 1.0,
+                    "points_computed_minimum": 12210918.0,
+                    "points_computed_per_production": 12313920.0,
+                    "points_computed_per_realization": 12210918.0,
+                    "points_computed_total": 12210918.0,
+                    "scalar_loads_per_scalar": 1.0,
+                    "scalar_loads_per_vector": 16.0,
+                    "unique_bytes_read_per_realization": 64.0,
+                    "unique_bytes_read_per_task": 12120000.0,
+                    "unique_bytes_read_per_vector": 64.0,
+                    "unique_lines_read_per_realization": 1.0,
+                    "unique_lines_read_per_task": 1515.0,
+                    "unique_lines_read_per_vector": 1.0,
+                    "unrolled_loop_extent": 1.0,
+                    "vector_loads_per_vector": 0.0,
+                    "vector_size": 16.0,
+                    "working_set": 64.0,
+                    "working_set_at_production": 110471580.0,
+                    "working_set_at_realization": 110471580.0,
+                    "working_set_at_root": 110471580.0,
+                    "working_set_at_task": 64.0
+                }
+            },
+            "Name": "mirror_interior"
+        },
+        {
+            "Details": {
+                "scheduling_feature": {
+                    "allocation_bytes_read_per_realization": 48000000.0,
+                    "bytes_at_production": 64.0,
+                    "bytes_at_realization": 64.0,
+                    "bytes_at_root": 48000000.0,
+                    "bytes_at_task": 64.0,
+                    "inlined_calls": 0.0,
+                    "inner_parallelism": 1.0,
+                    "innermost_bytes_at_production": 64.0,
+                    "innermost_bytes_at_realization": 64.0,
+                    "innermost_bytes_at_root": 8000.0,
+                    "innermost_bytes_at_task": 64.0,
+                    "innermost_loop_extent": 1.0,
+                    "innermost_pure_loop_extent": 1.0,
+                    "native_vector_size": 16.0,
+                    "num_productions": 769620.0,
+                    "num_realizations": 769620.0,
+                    "num_scalars": 0.0,
+                    "num_vectors": 769620.0,
+                    "outer_parallelism": 4.0,
+                    "points_computed_minimum": 12000000.0,
+                    "points_computed_per_production": 16.0,
+                    "points_computed_per_realization": 16.0,
+                    "points_computed_total": 12313920.0,
+                    "scalar_loads_per_scalar": 1.0,
+                    "scalar_loads_per_vector": 0.0,
+                    "unique_bytes_read_per_realization": 64.0,
+                    "unique_bytes_read_per_task": 0.0,
+                    "unique_bytes_read_per_vector": 64.0,
+                    "unique_lines_read_per_realization": 1.0,
+                    "unique_lines_read_per_task": 0.0,
+                    "unique_lines_read_per_vector": 1.0,
+                    "unrolled_loop_extent": 1.0,
+                    "vector_loads_per_vector": 1.0,
+                    "vector_size": 16.0,
+                    "working_set": 0.0,
+                    "working_set_at_production": 64.0,
+                    "working_set_at_realization": 64.0,
+                    "working_set_at_root": 110471580.0,
+                    "working_set_at_task": 64.0
+                }
+            },
+            "Name": "lambda_0"
+        },
+        {
+            "name": "total_execution_time_ms",
+            "value": 169.05159
+        }
+    ]
+}

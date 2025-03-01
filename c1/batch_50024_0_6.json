@@ -1,0 +1,12 @@
+{
+    "programming_details": {
+        "Edges": [],
+        "Nodes": []
+    },
+    "scheduling_data": [
+        {
+            "name": "total_execution_time_ms",
+            "value": 0.0
+        }
+    ]
+}
